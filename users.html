@@ -1,0 +1,1148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Users — GeepChris Bridge Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- ===== FIREBASE SDK ===== -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+    <style>
+        /* ===== RESET & BASE ===== */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg-body: #f8fafc;
+            --bg-card: #ffffff;
+            --bg-sidebar: #020617;
+            --text-primary: #0f172a;
+            --text-secondary: #64748b;
+            --text-sidebar: #ffffff;
+            --border: #e2e8f0;
+            --green: #16a34a;
+            --green-light: #22c55e;
+            --red: #dc2626;
+            --orange: #f97316;
+            --shadow: 0 1px 3px rgba(0,0,0,0.06);
+            --shadow-lg: 0 4px 12px rgba(0,0,0,0.08);
+            --radius: 12px;
+            --sidebar-width: 260px;
+        }
+
+        html, body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-body);
+            color: var(--text-primary);
+            height: 100%;
+            overflow-x: hidden;
+        }
+
+        body { display: flex; min-height: 100vh; }
+
+        /* ===== LOADING OVERLAY ===== */
+        #authLoadingOverlay {
+            position: fixed;
+            inset: 0;
+            background: #020617;
+            z-index: 99999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 20px;
+            font-family: 'Inter', sans-serif;
+            transition: opacity 0.4s ease;
+        }
+
+        #authLoadingOverlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        #authLoadingOverlay .spinner {
+            width: 48px;
+            height: 48px;
+            border: 3px solid rgba(255,255,255,0.08);
+            border-top-color: #22c55e;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        #authLoadingOverlay .loading-text {
+            color: rgba(255,255,255,0.4);
+            font-size: 0.85rem;
+            font-weight: 500;
+            letter-spacing: 0.05em;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* ===== SIDEBAR ===== */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: var(--bg-sidebar);
+            color: var(--text-sidebar);
+            min-height: 100vh;
+            padding: 24px 16px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow-y: auto;
+        }
+        .sidebar .logo { display: flex; align-items: center; gap: 12px; margin-bottom: 32px; padding-bottom: 16px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+        .sidebar .logo img { height: 40px; width: auto; }
+        .sidebar .logo .logo-fallback { font-size: 1.1rem; font-weight: 800; color: #fff; }
+        .sidebar .logo .logo-fallback span { color: var(--green-light); }
+        .sidebar .nav { list-style: none; flex: 1; }
+        .sidebar .nav li { margin-bottom: 2px; }
+        .sidebar .nav a { display: flex; align-items: center; gap: 14px; padding: 12px 14px; border-radius: var(--radius); color: rgba(255,255,255,0.6); text-decoration: none; font-weight: 500; font-size: 0.9rem; transition: all 0.2s ease; }
+        .sidebar .nav a:hover { background: rgba(255,255,255,0.08); color: #fff; }
+        .sidebar .nav a.active { background: rgba(34,197,94,0.15); color: var(--green-light); }
+        .sidebar .nav a i { width: 20px; text-align: center; font-size: 1.1rem; }
+        .sidebar .user-section { padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.08); margin-top: auto; }
+        .sidebar .user-section .user-info { display: flex; align-items: center; gap: 12px; padding: 10px 14px; }
+        .sidebar .user-section .user-avatar { width: 38px; height: 38px; border-radius: 50%; background: var(--green); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem; color: #fff; }
+        .sidebar .user-section .user-name { font-size: 0.85rem; font-weight: 600; color: #fff; }
+        .sidebar .user-section .user-role { font-size: 0.75rem; color: rgba(255,255,255,0.5); }
+        .sidebar .user-section .logout-btn { display: flex; width: 100%; padding: 10px 14px; border: none; border-radius: var(--radius); background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.6); font-weight: 500; font-size: 0.85rem; cursor: pointer; transition: 0.2s; text-align: left; margin-top: 8px; align-items: center; gap: 10px; font-family: 'Inter', sans-serif; }
+        .sidebar .user-section .logout-btn:hover { background: rgba(220,38,38,0.2); color: var(--red); }
+
+        /* ===== MAIN CONTENT ===== */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            flex: 1;
+            padding: 24px 32px;
+            min-height: 100vh;
+            width: calc(100% - var(--sidebar-width));
+            display: none;
+        }
+
+        .main-content.visible {
+            display: block;
+        }
+
+        /* ===== TOP BAR ===== */
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+            background: var(--bg-card);
+            padding: 16px 24px;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+        }
+        .topbar .page-title h1 { font-size: 1.5rem; font-weight: 700; color: var(--text-primary); }
+        .topbar .page-title p { font-size: 0.85rem; color: var(--text-secondary); margin-top: 2px; }
+        .topbar .topbar-actions { display: flex; align-items: center; gap: 16px; }
+        .topbar .topbar-actions .notification-bell { position: relative; font-size: 1.2rem; cursor: pointer; color: var(--text-secondary); transition: 0.2s; }
+        .topbar .topbar-actions .notification-bell:hover { color: var(--text-primary); }
+        .topbar .topbar-actions .notification-bell .badge { position: absolute; top: -4px; right: -4px; width: 18px; height: 18px; background: var(--green); border-radius: 50%; font-size: 0.6rem; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; }
+        .topbar .topbar-actions .menu-toggle { display: none; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-primary); padding: 4px; transition: 0.3s; }
+        .topbar .topbar-actions .menu-toggle:hover { color: var(--green); }
+
+        /* ===== HAMBURGER ANIMATION ===== */
+        .hamburger { width: 28px; height: 20px; position: relative; cursor: pointer; display: flex; flex-direction: column; justify-content: space-between; }
+        .hamburger span { display: block; width: 100%; height: 2.5px; background: var(--text-primary); border-radius: 4px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); transform-origin: center; }
+        .hamburger.active span:nth-child(1) { transform: translateY(8.75px) rotate(45deg); }
+        .hamburger.active span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+        .hamburger.active span:nth-child(3) { transform: translateY(-8.75px) rotate(-45deg); }
+
+        /* ===== ACCESS DENIED ===== */
+        .access-denied {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-secondary);
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+        }
+        .access-denied i {
+            font-size: 3rem;
+            color: var(--red);
+            margin-bottom: 16px;
+            display: block;
+        }
+
+        /* ===== USERS TABLE ===== */
+        .users-container {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .users-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .users-header h2 {
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        .users-header .add-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            border: none;
+            border-radius: var(--radius);
+            background: var(--green);
+            color: #fff;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: 0.2s;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .users-header .add-btn:hover {
+            background: var(--green-light);
+        }
+
+        .table-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .table-toolbar .search-box {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--bg-body);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 4px 12px;
+            flex: 1 1 280px;
+        }
+
+        .table-toolbar .search-box i { color: var(--text-secondary); font-size: 0.9rem; }
+        .table-toolbar .search-box input { border: none; background: transparent; padding: 8px 0; font-size: 0.9rem; width: 100%; outline: none; font-family: 'Inter', sans-serif; }
+
+        .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .users-container table { width: 100%; border-collapse: collapse; min-width: 700px; }
+        .users-container table thead { background: var(--bg-body); }
+        .users-container table thead th { padding: 10px 14px; text-align: left; font-size: 0.7rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; }
+        .users-container table tbody td { padding: 12px 14px; font-size: 0.85rem; border-bottom: 1px solid var(--border); }
+        .users-container table tbody tr:last-child td { border-bottom: none; }
+        .users-container table tbody tr:hover { background: var(--bg-body); }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 999px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+        .status-badge.active { background: rgba(22,163,74,0.1); color: var(--green); }
+        .status-badge.inactive { background: rgba(220,38,38,0.1); color: var(--red); }
+        .status-badge.pending { background: rgba(249,115,22,0.1); color: var(--orange); }
+
+        .action-buttons { display: flex; gap: 6px; flex-wrap: wrap; }
+        .action-buttons .btn-sm { padding: 4px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.7rem; font-weight: 600; cursor: pointer; transition: 0.2s; background: transparent; font-family: 'Inter', sans-serif; }
+        .action-buttons .btn-sm.edit { color: #3b82f6; border-color: #3b82f6; }
+        .action-buttons .btn-sm.edit:hover { background: #3b82f6; color: #fff; }
+        .action-buttons .btn-sm.delete { color: var(--red); border-color: var(--red); }
+        .action-buttons .btn-sm.delete:hover { background: var(--red); color: #fff; }
+        .action-buttons .btn-sm.toggle { color: var(--orange); border-color: var(--orange); }
+        .action-buttons .btn-sm.toggle:hover { background: var(--orange); color: #fff; }
+
+        .role-badge {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 999px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+        .role-badge.super_admin { background: rgba(168,85,247,0.15); color: #a855f7; }
+        .role-badge.operations_manager { background: rgba(59,130,246,0.15); color: #3b82f6; }
+        .role-badge.processing_officer { background: rgba(249,115,22,0.15); color: #f97316; }
+        .role-badge.content_manager { background: rgba(234,179,8,0.15); color: #ca8a04; }
+
+        .empty-state { text-align: center; padding: 40px 20px; color: var(--text-secondary); }
+        .empty-state i { font-size: 2.5rem; color: var(--border); margin-bottom: 12px; display: block; }
+
+        .loading { display: flex; align-items: center; justify-content: center; padding: 40px 20px; color: var(--text-secondary); gap: 12px; }
+        .loading i { animation: spin 1s linear infinite; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        /* ===== MODAL ===== */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .modal-overlay.active { display: flex; }
+
+        .modal-box {
+            background: var(--bg-card);
+            border-radius: 16px;
+            max-width: 480px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            animation: modalFade 0.25s ease;
+        }
+
+        @keyframes modalFade {
+            from { opacity: 0; transform: scale(0.96) translateY(12px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .modal-header h2 { font-size: 1.2rem; font-weight: 700; }
+        .modal-header .close-btn { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-secondary); transition: 0.2s; padding: 4px; }
+        .modal-header .close-btn:hover { color: var(--red); }
+
+        .modal-body { padding: 24px; }
+
+        .modal-body .form-group { margin-bottom: 18px; }
+        .modal-body .form-group label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 4px; }
+        .modal-body .form-group label .required { color: var(--red); }
+        .modal-body .form-group input,
+        .modal-body .form-group select { width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.9rem; color: var(--text-primary); background: var(--bg-body); transition: 0.2s; font-family: 'Inter', sans-serif; }
+        .modal-body .form-group input:focus,
+        .modal-body .form-group select:focus { outline: none; border-color: var(--green); box-shadow: 0 0 0 3px rgba(22,163,74,0.1); }
+
+        .modal-footer {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 12px;
+            padding: 16px 24px;
+            border-top: 1px solid var(--border);
+        }
+
+        .modal-footer .btn-cancel { padding: 8px 24px; border: 1px solid var(--border); border-radius: 8px; background: transparent; color: var(--text-secondary); font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: 0.2s; font-family: 'Inter', sans-serif; }
+        .modal-footer .btn-cancel:hover { background: var(--bg-body); }
+        .modal-footer .btn-save { padding: 8px 24px; border: none; border-radius: 8px; background: var(--green); color: #fff; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: 0.2s; font-family: 'Inter', sans-serif; }
+        .modal-footer .btn-save:hover { background: var(--green-light); }
+        .modal-footer .btn-save:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        /* ===== TOAST ===== */
+        .toast-message {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: var(--green);
+            color: #fff;
+            padding: 16px 24px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-lg);
+            z-index: 9999;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+            pointer-events: none;
+            font-family: 'Inter', sans-serif;
+        }
+        .toast-message.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
+        .toast-message.error { background: var(--red); }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 992px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.open { transform: translateX(0); }
+            .main-content { margin-left: 0; width: 100%; padding: 16px 20px; }
+            .topbar .topbar-actions .menu-toggle { display: block; }
+        }
+
+        @media (max-width: 768px) {
+            .topbar { flex-direction: column; align-items: flex-start; gap: 12px; padding: 16px; }
+            .topbar .topbar-actions { width: 100%; justify-content: space-between; }
+            .users-header { flex-direction: column; align-items: stretch; }
+            .users-header .add-btn { justify-content: center; }
+            .table-toolbar { flex-direction: column; align-items: stretch; }
+            .modal-box { max-width: 100%; margin: 10px; }
+        }
+
+        @media (max-width: 480px) {
+            .main-content { padding: 12px 16px; }
+            .topbar .page-title h1 { font-size: 1.2rem; }
+        }
+
+        .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 999; opacity: 0; transition: opacity 0.3s ease; }
+        .sidebar-overlay.active { display: block; opacity: 1; }
+    </style>
+</head>
+<body>
+
+    <!-- ===== LOADING OVERLAY ===== -->
+    <div id="authLoadingOverlay">
+        <div class="spinner"></div>
+        <div class="loading-text">Authenticating...</div>
+    </div>
+
+    <!-- ===== SIDEBAR OVERLAY (mobile) ===== -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- ===== SIDEBAR ===== -->
+    <aside class="sidebar" id="sidebar">
+        <div class="logo">
+            <img src="../assets/logo.png" alt="GeepChris Bridge" onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">
+            <span class="logo-fallback">GeepChris<span>Bridge</span></span>
+        </div>
+
+        <ul class="nav">
+            <li><a href="index.html"><i class="fas fa-chart-pie"></i> Dashboard</a></li>
+            <li><a href="services.html"><i class="fas fa-cogs"></i> Services</a></li>
+            <li><a href="visa-countries.html"><i class="fas fa-globe-africa"></i> Visa Countries</a></li>
+            <li><a href="form-templates.html"><i class="fas fa-file-alt"></i> Form Templates</a></li>
+            <li><a href="applications.html"><i class="fas fa-list-check"></i> Applications</a></li>
+            <li><a href="media.html"><i class="fas fa-images"></i> Media Library</a></li>
+            <li><a href="settings.html"><i class="fas fa-sliders-h"></i> Settings</a></li>
+            <li><a href="users.html" class="active" id="usersNavLink"><i class="fas fa-users-cog"></i> Users</a></li>
+        </ul>
+
+        <div class="user-section">
+            <div class="user-info">
+                <div class="user-avatar" id="userAvatar">G</div>
+                <div>
+                    <div class="user-name" id="userName">Guest</div>
+                    <div class="user-role" id="userRole">Not Logged In</div>
+                </div>
+            </div>
+            <button class="logout-btn" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</button>
+        </div>
+    </aside>
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <main class="main-content" id="mainContent">
+
+        <!-- ===== TOP BAR ===== -->
+        <div class="topbar">
+            <div class="page-title">
+                <h1>Users</h1>
+                <p id="pageSubtitle">Manage admin staff members.</p>
+            </div>
+            <div class="topbar-actions">
+                <div class="notification-bell">
+                    <i class="fas fa-bell"></i>
+                    <span class="badge" id="notificationCount">0</span>
+                </div>
+                <button class="menu-toggle" id="menuToggle">
+                    <div class="hamburger" id="hamburger">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                </button>
+            </div>
+        </div>
+
+        <!-- ===== USERS CONTENT ===== -->
+        <div id="usersContent">
+            <div class="users-container">
+                <div class="users-header">
+                    <h2>All Staff Members</h2>
+                    <button class="add-btn" id="addUserBtn"><i class="fas fa-plus"></i> Add Staff</button>
+                </div>
+
+                <div class="table-toolbar">
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="searchInput" placeholder="Search by name, email, role...">
+                    </div>
+                </div>
+
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Status</th>
+                                <th>Activated</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTableBody">
+                            <tr>
+                                <td colspan="6">
+                                    <div class="loading">
+                                        <i class="fas fa-spinner"></i> Loading users...
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- ===== ADD/EDIT USER MODAL ===== -->
+    <div class="modal-overlay" id="userModal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h2 id="modalTitle">Add Staff Member</h2>
+                <button class="close-btn" id="modalCloseBtn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="userForm">
+                    <input type="hidden" id="editUserId" value="">
+
+                    <div class="form-group">
+                        <label>Full Name <span class="required">*</span></label>
+                        <input type="text" id="userFullName" placeholder="John Doe" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Email Address <span class="required">*</span></label>
+                        <input type="email" id="userEmail" placeholder="john@company.com" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Role <span class="required">*</span></label>
+                        <select id="userRoleSelectInput" required>
+                            <option value="">Select Role</option>
+                            <option value="operations_manager">Operations Manager</option>
+                            <option value="processing_officer">Processing Officer</option>
+                            <option value="content_manager">Content Manager</option>
+                        </select>
+                        <small style="color:var(--text-secondary); display:block; margin-top:4px;">Super Admin role is reserved for the system owner.</small>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" id="modalCancelBtn">Cancel</button>
+                <button class="btn-save" id="modalSaveBtn">Add Staff</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== FIREBASE SDK ===== -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+    <script>
+        // ==========================================
+        // FIREBASE CONFIGURATION
+        // ==========================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyDHSOM7-GZXQ7tYySYTRiyCAHZOn9SQhhE",
+            authDomain: "geepchris-bridge.firebaseapp.com",
+            projectId: "geepchris-bridge",
+            storageBucket: "geepchris-bridge.firebasestorage.app",
+            messagingSenderId: "61219875988",
+            appId: "1:61219875988:web:a393bb73ce2b85991b9881"
+        };
+
+        // Initialize Firebase if not already initialized
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+
+        // ==========================================
+        // DOM ELEMENTS
+        // ==========================================
+        const sidebar = document.getElementById('sidebar');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+        const menuToggle = document.getElementById('menuToggle');
+        const hamburger = document.getElementById('hamburger');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const userName = document.getElementById('userName');
+        const userRole = document.getElementById('userRole');
+        const userAvatar = document.getElementById('userAvatar');
+        const pageSubtitle = document.getElementById('pageSubtitle');
+        const usersContent = document.getElementById('usersContent');
+        const usersTableBody = document.getElementById('usersTableBody');
+        const searchInput = document.getElementById('searchInput');
+        const addUserBtn = document.getElementById('addUserBtn');
+
+        const userModal = document.getElementById('userModal');
+        const modalCloseBtn = document.getElementById('modalCloseBtn');
+        const modalCancelBtn = document.getElementById('modalCancelBtn');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalSaveBtn = document.getElementById('modalSaveBtn');
+        const editUserId = document.getElementById('editUserId');
+        const userFullName = document.getElementById('userFullName');
+        const userEmail = document.getElementById('userEmail');
+        const userRoleSelect = document.getElementById('userRoleSelectInput');
+
+        let currentStaff = null;
+        let allStaff = [];
+        let isEditing = false;
+
+        // ==========================================
+        // ROLE CONSTANTS
+        // ==========================================
+        const ROLES = {
+            SUPER_ADMIN: 'super_admin',
+            OPERATIONS_MANAGER: 'operations_manager',
+            PROCESSING_OFFICER: 'processing_officer',
+            CONTENT_MANAGER: 'content_manager'
+        };
+
+        const ROLE_LABELS = {
+            [ROLES.SUPER_ADMIN]: 'Super Admin',
+            [ROLES.OPERATIONS_MANAGER]: 'Operations Manager',
+            [ROLES.PROCESSING_OFFICER]: 'Processing Officer',
+            [ROLES.CONTENT_MANAGER]: 'Content Manager'
+        };
+
+        const ROLE_COLORS = {
+            [ROLES.SUPER_ADMIN]: 'super_admin',
+            [ROLES.OPERATIONS_MANAGER]: 'operations_manager',
+            [ROLES.PROCESSING_OFFICER]: 'processing_officer',
+            [ROLES.CONTENT_MANAGER]: 'content_manager'
+        };
+
+        function isSuperAdmin() { return currentStaff && currentStaff.role === ROLES.SUPER_ADMIN; }
+
+        // ==========================================
+        // AUTH GUARD - IMMEDIATE REDIRECT
+        // ==========================================
+        const currentUrl = window.location.pathname + window.location.search;
+
+        auth.onAuthStateChanged(async (user) => {
+            if (!user) {
+                window.location.href = `login.html?redirect=${encodeURIComponent(currentUrl)}`;
+                return;
+            }
+
+            try {
+                const staffSnapshot = await db.collection('staff')
+                    .where('uid', '==', user.uid)
+                    .limit(1)
+                    .get();
+
+                if (staffSnapshot.empty) {
+                    await auth.signOut();
+                    window.location.href = `login.html?redirect=${encodeURIComponent(currentUrl)}`;
+                    return;
+                }
+
+                const staffDoc = staffSnapshot.docs[0];
+                const staffData = staffDoc.data();
+
+                if (!staffData.active) {
+                    await auth.signOut();
+                    alert('Your account has been deactivated. Contact your administrator.');
+                    window.location.href = `login.html?redirect=${encodeURIComponent(currentUrl)}`;
+                    return;
+                }
+
+                if (!staffData.activated) {
+                    await auth.signOut();
+                    window.location.href = `login.html?redirect=${encodeURIComponent(currentUrl)}`;
+                    return;
+                }
+
+                // ✅ Authentication successful
+                currentStaff = {
+                    id: staffDoc.id,
+                    ...staffData
+                };
+
+                // Update UI
+                userName.textContent = staffData.fullName || 'Admin User';
+                userRole.textContent = ROLE_LABELS[staffData.role] || 'Staff';
+                userAvatar.textContent = (staffData.fullName || 'A')[0].toUpperCase();
+                pageSubtitle.textContent = 'Manage admin staff members.';
+                logoutBtn.style.display = 'flex';
+
+                // Only Super Admin can access this page
+                if (!isSuperAdmin()) {
+                    document.getElementById('mainContent').innerHTML = `
+                        <div class="access-denied">
+                            <i class="fas fa-lock"></i>
+                            <h2>Access Denied</h2>
+                            <p>You don't have permission to manage users. This page is only accessible to Super Admin.</p>
+                        </div>
+                    `;
+                    document.getElementById('mainContent').classList.add('visible');
+                    document.getElementById('authLoadingOverlay').classList.add('hidden');
+                    return;
+                }
+
+                // Hide loading overlay, show content
+                document.getElementById('authLoadingOverlay').classList.add('hidden');
+                document.getElementById('mainContent').classList.add('visible');
+
+                // Load staff data
+                loadStaff();
+
+            } catch (error) {
+                console.error('Auth error:', error);
+                await auth.signOut();
+                window.location.href = `login.html?redirect=${encodeURIComponent(currentUrl)}`;
+            }
+        });
+
+        // ==========================================
+        // SIDEBAR TOGGLE
+        // ==========================================
+        function toggleSidebar() {
+            sidebar.classList.toggle('open');
+            sidebarOverlay.classList.toggle('active');
+            hamburger.classList.toggle('active');
+            document.body.style.overflow = sidebar.classList.contains('open') ? 'hidden' : '';
+        }
+
+        menuToggle.addEventListener('click', toggleSidebar);
+        sidebarOverlay.addEventListener('click', toggleSidebar);
+
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 992 && sidebar.classList.contains('open')) {
+                toggleSidebar();
+            }
+        });
+
+        // ==========================================
+        // LOGOUT
+        // ==========================================
+        logoutBtn.addEventListener('click', () => {
+            auth.signOut().then(() => {
+                window.location.href = 'login.html';
+            }).catch((error) => {
+                console.error('Logout error:', error);
+            });
+        });
+
+        // ==========================================
+        // TOAST MESSAGE
+        // ==========================================
+        let toastTimeout;
+
+        function showToast(message, isError = false) {
+            const existing = document.querySelector('.toast-message');
+            if (existing) existing.remove();
+
+            const toast = document.createElement('div');
+            toast.className = 'toast-message show';
+            toast.style.cssText = `
+                position: fixed;
+                bottom: 24px;
+                right: 24px;
+                background: ${isError ? '#dc2626' : '#16a34a'};
+                color: #fff;
+                padding: 16px 24px;
+                border-radius: 12px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                z-index: 99999;
+                font-weight: 600;
+                font-family: 'Inter', sans-serif;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                max-width: 440px;
+            `;
+            toast.innerHTML = `
+                <i class="fas ${isError ? 'fa-exclamation-circle' : 'fa-check-circle'}"></i>
+                <span>${message}</span>
+            `;
+            document.body.appendChild(toast);
+
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.remove();
+            }, 4000);
+        }
+
+        // ==========================================
+        // LOAD STAFF
+        // ==========================================
+        async function loadStaff() {
+            try {
+                const snapshot = await db.collection('staff')
+                    .orderBy('createdAt', 'desc')
+                    .get();
+
+                allStaff = [];
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    allStaff.push({
+                        id: doc.id,
+                        ...data
+                    });
+                });
+
+                renderStaff(allStaff);
+                document.getElementById('notificationCount').textContent = allStaff.length;
+
+            } catch (error) {
+                console.error('Error loading staff:', error);
+                usersTableBody.innerHTML = `
+                    <tr>
+                        <td colspan="6">
+                            <div style="text-align:center; padding:40px 20px; color:#dc2626;">
+                                <i class="fas fa-exclamation-circle" style="font-size:2rem; display:block; margin-bottom:12px;"></i>
+                                Error loading users. Please refresh.
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+
+        // ==========================================
+        // RENDER STAFF
+        // ==========================================
+        function renderStaff(staff) {
+            const search = searchInput.value.toLowerCase().trim();
+
+            let filtered = staff;
+            if (search) {
+                filtered = filtered.filter(s =>
+                    (s.fullName && s.fullName.toLowerCase().includes(search)) ||
+                    (s.email && s.email.toLowerCase().includes(search)) ||
+                    (s.role && ROLE_LABELS[s.role]?.toLowerCase().includes(search))
+                );
+            }
+
+            if (filtered.length === 0) {
+                usersTableBody.innerHTML = `
+                    <tr>
+                        <td colspan="6">
+                            <div class="empty-state">
+                                <i class="fas fa-users"></i>
+                                <p>${search ? 'No staff members match your search.' : 'No staff members found. Add your first staff member!'}</p>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            let html = '';
+            for (const staff of filtered) {
+                const roleLabel = ROLE_LABELS[staff.role] || staff.role || 'Unknown';
+                const roleColor = ROLE_COLORS[staff.role] || '';
+                const statusClass = staff.active ? 'active' : 'inactive';
+                const statusLabel = staff.active ? 'Active' : 'Inactive';
+                const activatedLabel = staff.activated ? '✅ Yes' : '⏳ Pending';
+                const canDelete = staff.role !== ROLES.SUPER_ADMIN;
+
+                html += `
+                    <tr>
+                        <td><strong>${staff.fullName || '—'}</strong></td>
+                        <td>${staff.email || '—'}</td>
+                        <td><span class="role-badge ${roleColor}">${roleLabel}</span></td>
+                        <td><span class="status-badge ${statusClass}">${statusLabel}</span></td>
+                        <td>${activatedLabel}</td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="btn-sm edit" data-id="${staff.id}" title="Edit">
+                                    <i class="fas fa-pen"></i> Edit
+                                </button>
+                                <button class="btn-sm toggle" data-id="${staff.id}" data-active="${staff.active}" title="Toggle Status">
+                                    <i class="fas ${staff.active ? 'fa-pause' : 'fa-play'}"></i>
+                                    ${staff.active ? 'Deactivate' : 'Activate'}
+                                </button>
+                                ${canDelete ? `
+                                    <button class="btn-sm delete" data-id="${staff.id}" title="Delete">
+                                        <i class="fas fa-trash"></i> Delete
+                                    </button>
+                                ` : ''}
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }
+
+            usersTableBody.innerHTML = html;
+
+            document.querySelectorAll('.btn-sm.edit').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const id = this.dataset.id;
+                    const staff = allStaff.find(s => s.id === id);
+                    if (staff) openEditModal(staff);
+                });
+            });
+
+            document.querySelectorAll('.btn-sm.toggle').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const id = this.dataset.id;
+                    const currentActive = this.dataset.active === 'true';
+                    toggleStaffStatus(id, currentActive);
+                });
+            });
+
+            document.querySelectorAll('.btn-sm.delete').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const id = this.dataset.id;
+                    if (confirm('Are you sure you want to delete this staff member?')) {
+                        deleteStaff(id);
+                    }
+                });
+            });
+        }
+
+        // ==========================================
+        // SEARCH
+        // ==========================================
+        searchInput.addEventListener('input', function() {
+            renderStaff(allStaff);
+        });
+
+        // ==========================================
+        // OPEN ADD MODAL
+        // ==========================================
+        addUserBtn.addEventListener('click', function() {
+            isEditing = false;
+            editUserId.value = '';
+            userFullName.value = '';
+            userEmail.value = '';
+            userRoleSelect.value = '';
+            modalTitle.textContent = 'Add Staff Member';
+            modalSaveBtn.textContent = 'Add Staff';
+            userModal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+            setTimeout(() => userFullName.focus(), 100);
+        });
+
+        // ==========================================
+        // OPEN EDIT MODAL
+        // ==========================================
+        function openEditModal(staff) {
+            isEditing = true;
+            editUserId.value = staff.id;
+            userFullName.value = staff.fullName || '';
+            userEmail.value = staff.email || '';
+            userRoleSelect.value = staff.role || '';
+            modalTitle.textContent = 'Edit Staff Member';
+            modalSaveBtn.textContent = 'Update Staff';
+            userModal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        // ==========================================
+        // CLOSE MODAL
+        // ==========================================
+        function closeModal() {
+            userModal.classList.remove('active');
+            document.body.style.overflow = '';
+            userFullName.value = '';
+            userEmail.value = '';
+            userRoleSelect.value = '';
+            editUserId.value = '';
+            isEditing = false;
+        }
+
+        modalCloseBtn.addEventListener('click', closeModal);
+        modalCancelBtn.addEventListener('click', closeModal);
+        userModal.addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+
+        // ==========================================
+        // SAVE STAFF (ADD / EDIT) - FIXED
+        // ==========================================
+        // Use the form's submit event with proper validation
+        document.getElementById('userForm').addEventListener('submit', async function(e) {
+            // Prevent default form submission
+            e.preventDefault();
+
+            // Prevent multiple submissions
+            if (modalSaveBtn.disabled) return;
+
+            const fullName = userFullName.value.trim();
+            const email = userEmail.value.trim().toLowerCase();
+            const role = userRoleSelect.value;
+
+            // Validate inputs
+            if (!fullName) {
+                alert('Please enter the staff member\'s full name.');
+                userFullName.focus();
+                return;
+            }
+
+            if (!email) {
+                alert('Please enter the staff member\'s email address.');
+                userEmail.focus();
+                return;
+            }
+
+            // Validate email format
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                alert('Please enter a valid email address.');
+                userEmail.focus();
+                return;
+            }
+
+            // Check if role is selected (this is the fix for the role validation)
+            if (!role || role === '') {
+                alert('Please select a role for the staff member.');
+                userRoleSelect.focus();
+                return;
+            }
+
+            // Disable button during save
+            modalSaveBtn.disabled = true;
+            modalSaveBtn.textContent = isEditing ? 'Updating...' : 'Adding...';
+
+            try {
+                if (isEditing) {
+                    // ===== EDIT MODE =====
+                    const id = editUserId.value;
+                    
+                    // Check if email already exists for another user
+                    const existing = await db.collection('staff')
+                        .where('email', '==', email)
+                        .get();
+                    
+                    let emailInUse = false;
+                    existing.forEach(doc => {
+                        if (doc.id !== id) {
+                            emailInUse = true;
+                        }
+                    });
+                    
+                    if (emailInUse) {
+                        alert('A staff member with this email already exists.');
+                        modalSaveBtn.disabled = false;
+                        modalSaveBtn.textContent = 'Update Staff';
+                        return;
+                    }
+
+                    await db.collection('staff').doc(id).update({
+                        fullName: fullName,
+                        email: email,
+                        role: role,
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    showToast('Staff member updated successfully!');
+                    
+                } else {
+                    // ===== ADD MODE =====
+                    // Check if email already exists
+                    const existing = await db.collection('staff')
+                        .where('email', '==', email)
+                        .get();
+
+                    if (!existing.empty) {
+                        alert('A staff member with this email already exists.');
+                        modalSaveBtn.disabled = false;
+                        modalSaveBtn.textContent = 'Add Staff';
+                        return;
+                    }
+
+                    // Create new staff document with the correct format
+                    await db.collection('staff').add({
+                        uid: null,
+                        email: email,
+                        fullName: fullName,
+                        role: role,
+                        active: true,
+                        activated: false,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        lastLogin: null,
+                        createdBy: currentStaff.id,
+                        profilePhoto: null
+                    });
+                    showToast('Staff member added successfully! They will need to activate their account on first login.');
+                }
+
+                closeModal();
+                loadStaff();
+
+            } catch (error) {
+                console.error('Error saving staff:', error);
+                showToast('Error saving staff member. Please try again.', true);
+            } finally {
+                modalSaveBtn.disabled = false;
+                modalSaveBtn.textContent = isEditing ? 'Update Staff' : 'Add Staff';
+            }
+        });
+
+        // Also trigger form submit when Save button is clicked
+        modalSaveBtn.addEventListener('click', function() {
+            document.getElementById('userForm').dispatchEvent(new Event('submit'));
+        });
+
+        // ==========================================
+        // TOGGLE STAFF STATUS
+        // ==========================================
+        async function toggleStaffStatus(id, currentActive) {
+            const newStatus = !currentActive;
+            const action = newStatus ? 'activate' : 'deactivate';
+
+            if (!confirm(`Are you sure you want to ${action} this staff member?`)) return;
+
+            try {
+                await db.collection('staff').doc(id).update({
+                    active: newStatus,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                showToast(`Staff member ${action}d successfully.`);
+                loadStaff();
+            } catch (error) {
+                console.error('Error toggling status:', error);
+                showToast('Error updating staff status.', true);
+            }
+        }
+
+        // ==========================================
+        // DELETE STAFF
+        // ==========================================
+        async function deleteStaff(id) {
+            try {
+                const staff = allStaff.find(s => s.id === id);
+                if (staff && staff.role === ROLES.SUPER_ADMIN) {
+                    alert('Cannot delete Super Admin.');
+                    return;
+                }
+
+                await db.collection('staff').doc(id).delete();
+                showToast('Staff member deleted successfully.');
+                loadStaff();
+            } catch (error) {
+                console.error('Error deleting staff:', error);
+                showToast('Error deleting staff member.', true);
+            }
+        }
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,2256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visa Countries — GeepChris Bridge Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- ===== FIREBASE SDK ===== -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+
+    <style>
+        /* ===== RESET & BASE ===== */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg-body: #f8fafc;
+            --bg-card: #ffffff;
+            --bg-sidebar: #020617;
+            --text-primary: #0f172a;
+            --text-secondary: #64748b;
+            --text-sidebar: #ffffff;
+            --border: #e2e8f0;
+            --green: #16a34a;
+            --green-light: #22c55e;
+            --red: #dc2626;
+            --shadow: 0 1px 3px rgba(0,0,0,0.06);
+            --shadow-lg: 0 4px 12px rgba(0,0,0,0.08);
+            --radius: 12px;
+            --sidebar-width: 260px;
+        }
+
+        html, body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-body);
+            color: var(--text-primary);
+            height: 100%;
+            overflow-x: hidden;
+        }
+
+        body {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* ===== LOADING OVERLAY ===== */
+        #authLoadingOverlay {
+            position: fixed;
+            inset: 0;
+            background: #020617;
+            z-index: 99999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 20px;
+            font-family: 'Inter', sans-serif;
+            transition: opacity 0.4s ease;
+        }
+
+        #authLoadingOverlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        #authLoadingOverlay .spinner {
+            width: 48px;
+            height: 48px;
+            border: 3px solid rgba(255,255,255,0.08);
+            border-top-color: #22c55e;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        #authLoadingOverlay .loading-text {
+            color: rgba(255,255,255,0.4);
+            font-size: 0.85rem;
+            font-weight: 500;
+            letter-spacing: 0.05em;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* ===== SIDEBAR ===== */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: var(--bg-sidebar);
+            color: var(--text-sidebar);
+            min-height: 100vh;
+            padding: 24px 16px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow-y: auto;
+        }
+
+        .sidebar .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 32px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .sidebar .logo img {
+            height: 40px;
+            width: auto;
+        }
+
+        .sidebar .logo .logo-fallback {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: #fff;
+        }
+
+        .sidebar .logo .logo-fallback span {
+            color: var(--green-light);
+        }
+
+        .sidebar .nav {
+            list-style: none;
+            flex: 1;
+        }
+
+        .sidebar .nav li {
+            margin-bottom: 2px;
+        }
+
+        .sidebar .nav a {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 12px 14px;
+            border-radius: var(--radius);
+            color: rgba(255,255,255,0.6);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+        }
+
+        .sidebar .nav a:hover {
+            background: rgba(255,255,255,0.08);
+            color: #fff;
+        }
+
+        .sidebar .nav a.active {
+            background: rgba(34,197,94,0.15);
+            color: var(--green-light);
+        }
+
+        .sidebar .nav a i {
+            width: 20px;
+            text-align: center;
+            font-size: 1.1rem;
+        }
+
+        .sidebar .user-section {
+            padding-top: 16px;
+            border-top: 1px solid rgba(255,255,255,0.08);
+            margin-top: auto;
+        }
+
+        .sidebar .user-section .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 14px;
+        }
+
+        .sidebar .user-section .user-avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: var(--green);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: #fff;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .sidebar .user-section .user-avatar img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .sidebar .user-section .user-name {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .sidebar .user-section .user-role {
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.5);
+        }
+
+        .sidebar .user-section .logout-btn {
+            display: flex;
+            width: 100%;
+            padding: 10px 14px;
+            border: none;
+            border-radius: var(--radius);
+            background: rgba(255,255,255,0.05);
+            color: rgba(255,255,255,0.6);
+            font-weight: 500;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: 0.2s;
+            text-align: left;
+            margin-top: 8px;
+            align-items: center;
+            gap: 10px;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .sidebar .user-section .logout-btn:hover {
+            background: rgba(220,38,38,0.2);
+            color: var(--red);
+        }
+
+        /* ===== MAIN CONTENT ===== */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            flex: 1;
+            padding: 24px 32px;
+            min-height: 100vh;
+            width: calc(100% - var(--sidebar-width));
+            display: none;
+        }
+
+        .main-content.visible {
+            display: block;
+        }
+
+        /* ===== TOP BAR ===== */
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+            background: var(--bg-card);
+            padding: 16px 24px;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+        }
+
+        .topbar .page-title h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .topbar .page-title p {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+
+        .topbar .topbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .topbar .topbar-actions .notification-bell {
+            position: relative;
+            font-size: 1.2rem;
+            cursor: pointer;
+            color: var(--text-secondary);
+            transition: 0.2s;
+        }
+
+        .topbar .topbar-actions .notification-bell:hover {
+            color: var(--text-primary);
+        }
+
+        .topbar .topbar-actions .notification-bell .badge {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            width: 18px;
+            height: 18px;
+            background: var(--green);
+            border-radius: 50%;
+            font-size: 0.6rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-weight: 700;
+        }
+
+        .topbar .topbar-actions .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-primary);
+            padding: 4px;
+            transition: 0.3s;
+        }
+
+        .topbar .topbar-actions .menu-toggle:hover {
+            color: var(--green);
+        }
+
+        /* ===== HAMBURGER ANIMATION ===== */
+        .hamburger {
+            width: 28px;
+            height: 20px;
+            position: relative;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .hamburger span {
+            display: block;
+            width: 100%;
+            height: 2.5px;
+            background: var(--text-primary);
+            border-radius: 4px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-origin: center;
+        }
+
+        .hamburger.active span:nth-child(1) {
+            transform: translateY(8.75px) rotate(45deg);
+        }
+
+        .hamburger.active span:nth-child(2) {
+            opacity: 0;
+            transform: scaleX(0);
+        }
+
+        .hamburger.active span:nth-child(3) {
+            transform: translateY(-8.75px) rotate(-45deg);
+        }
+
+        /* ===== PAGE HEADER ===== */
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .page-header .header-left h2 {
+            font-size: 1.3rem;
+            font-weight: 700;
+        }
+
+        .page-header .header-left p {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .page-header .header-right {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        /* ===== FORM ===== */
+        .form-container {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 28px;
+            box-shadow: var(--shadow);
+            margin-bottom: 32px;
+        }
+
+        .form-container .form-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .form-grid .form-group {
+            margin-bottom: 0;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+
+        .form-group label .required {
+            color: var(--red);
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.9rem;
+            color: var(--text-primary);
+            background: var(--bg-body);
+            transition: 0.2s;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--green);
+            box-shadow: 0 0 0 3px rgba(22,163,74,0.1);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .form-group .country-input-wrapper {
+            position: relative;
+        }
+
+        .form-group .country-suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            max-height: 240px;
+            overflow-y: auto;
+            z-index: 100;
+            display: none;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .form-group .country-suggestions.active {
+            display: block;
+        }
+
+        .form-group .country-suggestions .suggestion-item {
+            padding: 10px 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.9rem;
+            transition: 0.2s;
+        }
+
+        .form-group .country-suggestions .suggestion-item:hover {
+            background: var(--bg-body);
+        }
+
+        .form-group .country-suggestions .suggestion-item .flag-image {
+            width: 24px;
+            height: 16px;
+            object-fit: cover;
+            border-radius: 2px;
+            border: 1px solid var(--border);
+        }
+
+        .form-group .price-input {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .form-group .price-input span {
+            font-weight: 700;
+            color: var(--text-secondary);
+        }
+
+        .form-group .image-preview {
+            margin-top: 8px;
+        }
+
+        .form-group .image-preview img {
+            max-width: 100%;
+            max-height: 120px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        .form-group .upload-status {
+            font-size: 0.85rem;
+            margin-top: 4px;
+        }
+
+        .form-group .upload-status .loading {
+            color: var(--text-secondary);
+        }
+
+        .form-group .upload-status .success {
+            color: var(--green);
+        }
+
+        .form-group .upload-status .error {
+            color: var(--red);
+        }
+
+        /* ===== IMAGE PREVIEW GRID ===== */
+        .preview-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .preview-item {
+            position: relative;
+            width: 80px;
+            height: 80px;
+        }
+
+        .preview-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            display: block;
+        }
+
+        .preview-item .remove-btn {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: none;
+            background: var(--red);
+            color: #fff;
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            line-height: 1;
+            padding: 0;
+        }
+
+        .preview-item .remove-btn:hover {
+            background: #b91c1c;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+            justify-content: flex-end;
+        }
+
+        .form-actions .btn-cancel {
+            padding: 10px 24px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: transparent;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-weight: 600;
+            transition: 0.2s;
+        }
+
+        .form-actions .btn-cancel:hover {
+            background: var(--bg-body);
+        }
+
+        .form-actions .btn-submit {
+            padding: 10px 24px;
+            border: none;
+            border-radius: 8px;
+            background: var(--green);
+            color: #fff;
+            cursor: pointer;
+            font-weight: 600;
+            transition: 0.2s;
+        }
+
+        .form-actions .btn-submit:hover {
+            background: var(--green-light);
+        }
+
+        .form-actions .btn-submit:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* ===== TABLE ===== */
+        .table-container {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .table-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .table-toolbar .search-box {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--bg-body);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 4px 12px;
+            flex: 1 1 280px;
+        }
+
+        .table-toolbar .search-box i {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .table-toolbar .search-box input {
+            border: none;
+            background: transparent;
+            padding: 8px 0;
+            font-size: 0.9rem;
+            width: 100%;
+            outline: none;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .table-toolbar .filter-dropdown {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .table-toolbar .filter-dropdown label {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .table-toolbar .filter-dropdown select {
+            padding: 8px 32px 8px 14px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--bg-body);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.85rem;
+            color: var(--text-primary);
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            cursor: pointer;
+        }
+
+        .table-toolbar .filter-dropdown select:focus {
+            outline: none;
+            border-color: var(--green);
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .table-container table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 700px;
+        }
+
+        .table-container table thead {
+            background: var(--bg-body);
+        }
+
+        .table-container table thead th {
+            padding: 12px 16px;
+            text-align: left;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .table-container table tbody td {
+            padding: 14px 16px;
+            font-size: 0.9rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .table-container table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .table-container table tbody tr:hover {
+            background: var(--bg-body);
+        }
+
+        .table-container .flag-image {
+            width: 24px;
+            height: 16px;
+            object-fit: cover;
+            border-radius: 2px;
+            border: 1px solid #ddd;
+            display: inline-block;
+        }
+
+        .table-container .flag-fallback {
+            font-size: 1.4rem;
+            display: inline-block;
+        }
+
+        .table-container .status-toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .table-container .status-toggle .toggle-switch {
+            position: relative;
+            width: 40px;
+            height: 22px;
+            background: #ccc;
+            border-radius: 999px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .table-container .status-toggle .toggle-switch.active {
+            background: var(--green);
+        }
+
+        .table-container .status-toggle .toggle-switch .toggle-knob {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 18px;
+            height: 18px;
+            background: #fff;
+            border-radius: 50%;
+            transition: 0.3s;
+        }
+
+        .table-container .status-toggle .toggle-switch.active .toggle-knob {
+            left: 20px;
+        }
+
+        .table-container .status-label {
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .table-container .status-label.available {
+            color: var(--green);
+        }
+
+        .table-container .status-label.unavailable {
+            color: var(--text-secondary);
+        }
+
+        .table-container .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .table-container .action-buttons .btn-icon {
+            width: 32px;
+            height: 32px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.2s;
+            font-size: 0.85rem;
+        }
+
+        .table-container .action-buttons .btn-icon.edit {
+            background: rgba(59,130,246,0.1);
+            color: #3b82f6;
+        }
+
+        .table-container .action-buttons .btn-icon.edit:hover {
+            background: #3b82f6;
+            color: #fff;
+        }
+
+        .table-container .action-buttons .btn-icon.delete {
+            background: rgba(220,38,38,0.1);
+            color: var(--red);
+        }
+
+        .table-container .action-buttons .btn-icon.delete:hover {
+            background: var(--red);
+            color: #fff;
+        }
+
+        .table-container .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-secondary);
+        }
+
+        .table-container .empty-state i {
+            font-size: 3rem;
+            color: var(--border);
+            margin-bottom: 16px;
+            display: block;
+        }
+
+        /* ===== SUCCESS MESSAGE ===== */
+        .success-message {
+            display: none;
+            padding: 16px 20px;
+            background: rgba(22,163,74,0.1);
+            border: 1px solid var(--green);
+            border-radius: var(--radius);
+            color: var(--green);
+            margin-bottom: 20px;
+            font-weight: 600;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .success-message.active {
+            display: flex;
+        }
+
+        .success-message i {
+            font-size: 1.2rem;
+        }
+
+        /* ===== ACCESS DENIED ===== */
+        .access-denied {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-secondary);
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+        }
+
+        .access-denied i {
+            font-size: 3rem;
+            color: var(--red);
+            margin-bottom: 16px;
+            display: block;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 992px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+                width: 100%;
+                padding: 16px 20px;
+            }
+
+            .topbar .topbar-actions .menu-toggle {
+                display: block;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .topbar {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+                padding: 16px;
+            }
+
+            .topbar .topbar-actions {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .form-container {
+                padding: 20px;
+            }
+
+            .table-toolbar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .table-toolbar .search-box {
+                flex: 1 1 auto;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .main-content {
+                padding: 12px 16px;
+            }
+
+            .topbar .page-title h1 {
+                font-size: 1.2rem;
+            }
+
+            .table-container {
+                padding: 12px;
+            }
+
+            .form-container {
+                padding: 16px;
+            }
+        }
+
+        /* ===== SIDEBAR OVERLAY FOR MOBILE ===== */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .sidebar-overlay.active {
+            display: block;
+            opacity: 1;
+        }
+
+        /* ===== TOAST MESSAGE ===== */
+        .toast-message {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: var(--green);
+            color: #fff;
+            padding: 16px 24px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-lg);
+            z-index: 9999;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+            pointer-events: none;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .toast-message.show {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+
+        .toast-message.error {
+            background: var(--red);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ===== LOADING OVERLAY ===== -->
+    <div id="authLoadingOverlay">
+        <div class="spinner"></div>
+        <div class="loading-text">Authenticating...</div>
+    </div>
+
+    <!-- ===== SIDEBAR OVERLAY (mobile) ===== -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- ===== SIDEBAR ===== -->
+    <aside class="sidebar" id="sidebar">
+        <div class="logo">
+            <img src="../assets/logo.png" alt="GeepChris Bridge" onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">
+            <span class="logo-fallback">GeepChris<span>Bridge</span></span>
+        </div>
+
+        <ul class="nav">
+            <li><a href="index.html"><i class="fas fa-chart-pie"></i> Dashboard</a></li>
+            <li><a href="clients.html"><i class="fas fa-users"></i> Clients</a></li>
+            <li><a href="visa-countries.html" class="active"><i class="fas fa-globe-africa"></i> Visa Countries</a></li>
+            <li><a href="form-templates.html"><i class="fas fa-file-alt"></i> Form Templates</a></li>
+            <li><a href="applications.html"><i class="fas fa-list-check"></i> Applications</a></li>
+            <li><a href="settings.html"><i class="fas fa-sliders-h"></i> Settings</a></li>
+            <li><a href="users.html" id="usersNavLink"><i class="fas fa-users-cog"></i> Users</a></li>
+        </ul>
+
+        <div class="user-section">
+            <div class="user-info">
+                <div class="user-avatar" id="userAvatar">G</div>
+                <div>
+                    <div class="user-name" id="userName">Guest</div>
+                    <div class="user-role" id="userRole">Not Logged In</div>
+                </div>
+            </div>
+            <button class="logout-btn" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</button>
+        </div>
+    </aside>
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <main class="main-content" id="mainContent">
+
+        <!-- ===== TOP BAR ===== -->
+        <div class="topbar">
+            <div class="page-title">
+                <h1>Visa Countries</h1>
+                <p>Manage the visa countries available on your website.</p>
+            </div>
+            <div class="topbar-actions">
+                <div class="notification-bell">
+                    <i class="fas fa-bell"></i>
+                    <span class="badge" id="notificationCount">0</span>
+                </div>
+                <button class="menu-toggle" id="menuToggle">
+                    <div class="hamburger" id="hamburger">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                </button>
+            </div>
+        </div>
+
+        <!-- ===== SUCCESS MESSAGE ===== -->
+        <div class="success-message" id="successMessage">
+            <i class="fas fa-check-circle"></i>
+            <span id="successText">Visa country has been saved successfully.</span>
+        </div>
+
+        <!-- ===== FORM ===== -->
+        <div class="form-container">
+            <div class="form-title">
+                <i class="fas fa-plus-circle" style="color:var(--green);"></i>
+                <span id="formTitle">Add New Visa Country</span>
+            </div>
+            <form id="visaForm">
+                <input type="hidden" id="editId" value="">
+
+                <div class="form-grid">
+                    <!-- Country Name -->
+                    <div class="form-group">
+                        <label>Country Name <span class="required">*</span></label>
+                        <div class="country-input-wrapper">
+                            <input type="text" id="countryInput" placeholder="Start typing a country name..." autocomplete="off">
+                            <div class="country-suggestions" id="countrySuggestions"></div>
+                        </div>
+                    </div>
+
+                    <!-- Visa Type -->
+                    <div class="form-group">
+                        <label>Visa Type <span class="required">*</span></label>
+                        <select id="visaTypeInput" required>
+                            <option value="">Select visa type</option>
+                            <option value="Visiting Visa">Visiting Visa</option>
+                            <option value="Tourist Visa">Tourist Visa</option>
+                            <option value="Work Visa">Work Visa</option>
+                            <option value="Study Visa">Study Visa</option>
+                            <option value="Business Visa">Business Visa</option>
+                            <option value="Transit Visa">Transit Visa</option>
+                            <option value="Medical Visa">Medical Visa</option>
+                            <option value="Student Visa">Student Visa</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+
+                    <!-- Other Visa Type -->
+                    <div class="form-group" id="otherVisaGroup" style="display:none;">
+                        <label>Specify Visa Type <span class="required">*</span></label>
+                        <input type="text" id="otherVisaInput" placeholder="Enter visa type...">
+                    </div>
+
+                    <!-- Price -->
+                    <div class="form-group">
+                        <label>Price (NGN) <span class="required">*</span></label>
+                        <div class="price-input">
+                            <span>₦</span>
+                            <input type="number" id="priceInput" placeholder="350000" required min="0">
+                        </div>
+                    </div>
+
+                    <!-- Duration -->
+                    <div class="form-group">
+                        <label>Processing Duration <span class="required">*</span></label>
+                        <select id="durationInput" required>
+                            <option value="">Select duration</option>
+                            <option value="7 days (1 week)">7 days (1 week)</option>
+                            <option value="2 weeks">2 weeks</option>
+                            <option value="3 weeks">3 weeks</option>
+                            <option value="30 days">30 days</option>
+                            <option value="2 months">2 months</option>
+                            <option value="3 months">3 months</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+
+                    <!-- Other Duration -->
+                    <div class="form-group" id="otherDurationGroup" style="display:none;">
+                        <label>Specify Duration <span class="required">*</span></label>
+                        <input type="text" id="otherDurationInput" placeholder="Enter duration...">
+                    </div>
+
+                    <!-- Description -->
+                    <div class="form-group" style="grid-column: 1 / -1;">
+                        <label>Description</label>
+                        <textarea id="descriptionInput" rows="3" placeholder="Enter a description of the visa process..."></textarea>
+                    </div>
+
+                    <!-- Additional Image -->
+                    <div class="form-group" style="grid-column: 1 / -1;">
+                        <label>Additional Image <span class="required">*</span></label>
+                        <input type="file" id="imageInput" accept="image/*" multiple>
+                        <small style="color:var(--text-secondary); display:block; margin-top:4px;">Upload up to 5 country images. At least one is required.</small>
+                        <div class="image-preview" id="imagePreview"></div>
+                        <div class="upload-status" id="uploadStatus"></div>
+                    </div>
+
+                    <!-- Status -->
+                    <div class="form-group">
+                        <label>Status</label>
+                        <select id="statusInput">
+                            <option value="available">Available</option>
+                            <option value="unavailable">Unavailable</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn-cancel" id="cancelBtn">Cancel</button>
+                    <button type="submit" class="btn-submit" id="submitBtn">Save Visa</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- ===== TABLE ===== -->
+        <div class="table-container">
+            <div class="table-toolbar">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="searchInput" placeholder="Search by country, visa type, price, status...">
+                </div>
+                <div class="filter-dropdown">
+                    <label for="filterStatus">Filter:</label>
+                    <select id="filterStatus">
+                        <option value="all">All</option>
+                        <option value="available">Available</option>
+                        <option value="unavailable">Unavailable</option>
+                    </select>
+                </div>
+            </div>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Flag</th>
+                            <th>Country</th>
+                            <th>Visa Type</th>
+                            <th>Duration</th>
+                            <th>Price</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="visaTableBody">
+                        <tr>
+                            <td colspan="7">
+                                <div class="loading">
+                                    <i class="fas fa-spinner"></i> Loading visa countries...
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        // ==========================================
+        // FIREBASE CONFIGURATION
+        // ==========================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyDHSOM7-GZXQ7tYySYTRiyCAHZOn9SQhhE",
+            authDomain: "geepchris-bridge.firebaseapp.com",
+            projectId: "geepchris-bridge",
+            storageBucket: "geepchris-bridge.firebasestorage.app",
+            messagingSenderId: "61219875988",
+            appId: "1:61219875988:web:a393bb73ce2b85991b9881"
+        };
+
+        // Initialize Firebase if not already initialized
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+
+        // ==========================================
+        // CLOUDINARY CONFIGURATION
+        // ==========================================
+        const CLOUDINARY_CLOUD_NAME = 'dgc5nvaof';
+        const CLOUDINARY_UPLOAD_PRESET = 'geepchris';
+
+        // ==========================================
+        // DOM ELEMENTS
+        // ==========================================
+        const sidebar = document.getElementById('sidebar');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+        const menuToggle = document.getElementById('menuToggle');
+        const hamburger = document.getElementById('hamburger');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const userName = document.getElementById('userName');
+        const userRole = document.getElementById('userRole');
+        const userAvatar = document.getElementById('userAvatar');
+
+        const visaForm = document.getElementById('visaForm');
+        const formTitle = document.getElementById('formTitle');
+        const editId = document.getElementById('editId');
+        const submitBtn = document.getElementById('submitBtn');
+        const cancelBtn = document.getElementById('cancelBtn');
+
+        const countryInput = document.getElementById('countryInput');
+        const countrySuggestions = document.getElementById('countrySuggestions');
+        const visaTypeInput = document.getElementById('visaTypeInput');
+        const otherVisaGroup = document.getElementById('otherVisaGroup');
+        const otherVisaInput = document.getElementById('otherVisaInput');
+        const priceInput = document.getElementById('priceInput');
+        const durationInput = document.getElementById('durationInput');
+        const otherDurationGroup = document.getElementById('otherDurationGroup');
+        const otherDurationInput = document.getElementById('otherDurationInput');
+        const descriptionInput = document.getElementById('descriptionInput');
+        const imageInput = document.getElementById('imageInput');
+        const imagePreview = document.getElementById('imagePreview');
+        const uploadStatus = document.getElementById('uploadStatus');
+        const statusInput = document.getElementById('statusInput');
+
+        const successMessage = document.getElementById('successMessage');
+        const successText = document.getElementById('successText');
+
+        const searchInput = document.getElementById('searchInput');
+        const filterStatus = document.getElementById('filterStatus');
+        const visaTableBody = document.getElementById('visaTableBody');
+
+        let allVisas = [];
+        let deleteTargetId = null;
+        let selectedCountry = null;
+        let uploadedImageUrls = [];
+        let selectedFiles = [];
+        let currentStaff = null;
+
+        // ==========================================
+        // UPDATE SIDEBAR AVATAR - FIXED
+        // ==========================================
+        function updateSidebarAvatar(photoURL, fullName) {
+            if (photoURL && photoURL.trim() !== '') {
+                // Show image
+                userAvatar.innerHTML = `<img src="${photoURL}" alt="Profile">`;
+                userAvatar.style.background = 'transparent';
+                userAvatar.style.display = 'flex';
+                userAvatar.style.alignItems = 'center';
+                userAvatar.style.justifyContent = 'center';
+            } else {
+                // Show initials
+                const initial = (fullName || 'A')[0].toUpperCase();
+                userAvatar.innerHTML = initial;
+                userAvatar.style.background = 'var(--green)';
+                userAvatar.style.display = 'flex';
+                userAvatar.style.alignItems = 'center';
+                userAvatar.style.justifyContent = 'center';
+            }
+        }
+
+        // ==========================================
+        // ROLE CONSTANTS
+        // ==========================================
+        const ROLES = {
+            SUPER_ADMIN: 'super_admin',
+            OPERATIONS_MANAGER: 'operations_manager',
+            PROCESSING_OFFICER: 'processing_officer',
+            CONTENT_MANAGER: 'content_manager'
+        };
+
+        function isSuperAdmin() { return currentStaff && currentStaff.role === ROLES.SUPER_ADMIN; }
+        function isOperationsManager() { return currentStaff && currentStaff.role === ROLES.OPERATIONS_MANAGER; }
+        function isProcessingOfficer() { return currentStaff && currentStaff.role === ROLES.PROCESSING_OFFICER; }
+        function isContentManager() { return currentStaff && currentStaff.role === ROLES.CONTENT_MANAGER; }
+
+        // ==========================================
+        // AUTH GUARD - IMMEDIATE REDIRECT
+        // ==========================================
+        const currentUrl = window.location.pathname + window.location.search;
+
+        auth.onAuthStateChanged(async (user) => {
+            if (!user) {
+                window.location.href = `login.html?redirect=${encodeURIComponent(currentUrl)}`;
+                return;
+            }
+
+            try {
+                const staffSnapshot = await db.collection('staff')
+                    .where('uid', '==', user.uid)
+                    .limit(1)
+                    .get();
+
+                if (staffSnapshot.empty) {
+                    await auth.signOut();
+                    window.location.href = `login.html?redirect=${encodeURIComponent(currentUrl)}`;
+                    return;
+                }
+
+                const staffDoc = staffSnapshot.docs[0];
+                const staffData = staffDoc.data();
+
+                if (!staffData.active) {
+                    await auth.signOut();
+                    alert('Your account has been deactivated. Contact your administrator.');
+                    window.location.href = `login.html?redirect=${encodeURIComponent(currentUrl)}`;
+                    return;
+                }
+
+                if (!staffData.activated) {
+                    await auth.signOut();
+                    window.location.href = `login.html?redirect=${encodeURIComponent(currentUrl)}`;
+                    return;
+                }
+
+                // ✅ Authentication successful
+                currentStaff = {
+                    id: staffDoc.id,
+                    ...staffData
+                };
+
+                // Update UI
+                userName.textContent = staffData.fullName || 'Admin User';
+                userRole.textContent = staffData.role ? staffData.role.charAt(0).toUpperCase() + staffData.role.slice(1).replace('_', ' ') : 'Staff';
+                
+                // ===== FIX: Show profile photo in sidebar =====
+                updateSidebarAvatar(staffData.profilePhoto, staffData.fullName);
+                
+                logoutBtn.style.display = 'flex';
+
+                // Show/hide Users nav link
+                const usersNavLink = document.getElementById('usersNavLink');
+                if (usersNavLink) {
+                    usersNavLink.style.display = isSuperAdmin() ? 'flex' : 'none';
+                }
+
+                // Processing Officer cannot access Visa Countries
+                if (isProcessingOfficer()) {
+                    document.getElementById('mainContent').innerHTML = `
+                        <div class="access-denied">
+                            <i class="fas fa-lock"></i>
+                            <h2>Access Denied</h2>
+                            <p>You don't have permission to view Visa Countries. Please contact your administrator.</p>
+                        </div>
+                    `;
+                    document.getElementById('mainContent').classList.add('visible');
+                    document.getElementById('authLoadingOverlay').classList.add('hidden');
+                    return;
+                }
+
+                // Hide loading overlay, show content
+                document.getElementById('authLoadingOverlay').classList.add('hidden');
+                document.getElementById('mainContent').classList.add('visible');
+
+                // Load visa data
+                loadVisas();
+
+            } catch (error) {
+                console.error('Auth error:', error);
+                await auth.signOut();
+                window.location.href = `login.html?redirect=${encodeURIComponent(currentUrl)}`;
+            }
+        });
+
+        // ==========================================
+        // SIDEBAR TOGGLE
+        // ==========================================
+        function toggleSidebar() {
+            sidebar.classList.toggle('open');
+            sidebarOverlay.classList.toggle('active');
+            hamburger.classList.toggle('active');
+            document.body.style.overflow = sidebar.classList.contains('open') ? 'hidden' : '';
+        }
+
+        menuToggle.addEventListener('click', toggleSidebar);
+        sidebarOverlay.addEventListener('click', toggleSidebar);
+
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 992 && sidebar.classList.contains('open')) {
+                toggleSidebar();
+            }
+        });
+
+        // ==========================================
+        // LOGOUT
+        // ==========================================
+        logoutBtn.addEventListener('click', () => {
+            auth.signOut().then(() => {
+                window.location.href = 'login.html';
+            }).catch((error) => {
+                console.error('Logout error:', error);
+            });
+        });
+
+        // ==========================================
+        // TOAST MESSAGE
+        // ==========================================
+        let toastTimeout;
+
+        function showToast(message, isError = false) {
+            const existing = document.querySelector('.toast-message');
+            if (existing) existing.remove();
+
+            const toast = document.createElement('div');
+            toast.className = 'toast-message show';
+            toast.style.cssText = `
+                position: fixed;
+                bottom: 24px;
+                right: 24px;
+                background: ${isError ? '#dc2626' : '#16a34a'};
+                color: #fff;
+                padding: 16px 24px;
+                border-radius: 12px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                z-index: 99999;
+                font-weight: 600;
+                font-family: 'Inter', sans-serif;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                max-width: 440px;
+            `;
+            toast.innerHTML = `
+                <i class="fas ${isError ? 'fa-exclamation-circle' : 'fa-check-circle'}"></i>
+                <span>${message}</span>
+            `;
+            document.body.appendChild(toast);
+
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.remove();
+            }, 4000);
+        }
+
+        // ==========================================
+        // LOAD VISAS
+        // ==========================================
+        async function loadVisas() {
+            try {
+                const snapshot = await db.collection('visa-countries').orderBy('createdAt', 'desc').get();
+                allVisas = [];
+                snapshot.forEach(doc => {
+                    allVisas.push({ id: doc.id, ...doc.data() });
+                });
+                applyFiltersAndRender();
+                updateNotificationCount();
+            } catch (error) {
+                console.error('Error loading visas:', error);
+                visaTableBody.innerHTML = `
+                    <tr>
+                        <td colspan="7">
+                            <div style="text-align:center; padding:40px 20px; color:#dc2626;">
+                                <i class="fas fa-exclamation-circle" style="font-size:2rem; display:block; margin-bottom:12px;"></i>
+                                Error loading data. Please refresh.
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+
+        // ==========================================
+        // UPDATE NOTIFICATION COUNT
+        // ==========================================
+        function updateNotificationCount() {
+            const availableCount = allVisas.filter(visa => visa.status === 'available').length;
+            document.getElementById('notificationCount').textContent = availableCount;
+        }
+
+        // ==========================================
+        // COUNTRY DATA — 195 COUNTRIES
+        // ==========================================
+        const countries = [
+            { name: "Afghanistan", flag: "🇦🇫", flagUrl: "https://flagcdn.com/w40/af.png" },
+            { name: "Albania", flag: "🇦🇱", flagUrl: "https://flagcdn.com/w40/al.png" },
+            { name: "Algeria", flag: "🇩🇿", flagUrl: "https://flagcdn.com/w40/dz.png" },
+            { name: "Andorra", flag: "🇦🇩", flagUrl: "https://flagcdn.com/w40/ad.png" },
+            { name: "Angola", flag: "🇦🇴", flagUrl: "https://flagcdn.com/w40/ao.png" },
+            { name: "Antigua and Barbuda", flag: "🇦🇬", flagUrl: "https://flagcdn.com/w40/ag.png" },
+            { name: "Argentina", flag: "🇦🇷", flagUrl: "https://flagcdn.com/w40/ar.png" },
+            { name: "Armenia", flag: "🇦🇲", flagUrl: "https://flagcdn.com/w40/am.png" },
+            { name: "Australia", flag: "🇦🇺", flagUrl: "https://flagcdn.com/w40/au.png" },
+            { name: "Austria", flag: "🇦🇹", flagUrl: "https://flagcdn.com/w40/at.png" },
+            { name: "Azerbaijan", flag: "🇦🇿", flagUrl: "https://flagcdn.com/w40/az.png" },
+            { name: "Bahamas", flag: "🇧🇸", flagUrl: "https://flagcdn.com/w40/bs.png" },
+            { name: "Bahrain", flag: "🇧🇭", flagUrl: "https://flagcdn.com/w40/bh.png" },
+            { name: "Bangladesh", flag: "🇧🇩", flagUrl: "https://flagcdn.com/w40/bd.png" },
+            { name: "Barbados", flag: "🇧🇧", flagUrl: "https://flagcdn.com/w40/bb.png" },
+            { name: "Belarus", flag: "🇧🇾", flagUrl: "https://flagcdn.com/w40/by.png" },
+            { name: "Belgium", flag: "🇧🇪", flagUrl: "https://flagcdn.com/w40/be.png" },
+            { name: "Belize", flag: "🇧🇿", flagUrl: "https://flagcdn.com/w40/bz.png" },
+            { name: "Benin", flag: "🇧🇯", flagUrl: "https://flagcdn.com/w40/bj.png" },
+            { name: "Bhutan", flag: "🇧🇹", flagUrl: "https://flagcdn.com/w40/bt.png" },
+            { name: "Bolivia", flag: "🇧🇴", flagUrl: "https://flagcdn.com/w40/bo.png" },
+            { name: "Bosnia and Herzegovina", flag: "🇧🇦", flagUrl: "https://flagcdn.com/w40/ba.png" },
+            { name: "Botswana", flag: "🇧🇼", flagUrl: "https://flagcdn.com/w40/bw.png" },
+            { name: "Brazil", flag: "🇧🇷", flagUrl: "https://flagcdn.com/w40/br.png" },
+            { name: "Brunei", flag: "🇧🇳", flagUrl: "https://flagcdn.com/w40/bn.png" },
+            { name: "Bulgaria", flag: "🇧🇬", flagUrl: "https://flagcdn.com/w40/bg.png" },
+            { name: "Burkina Faso", flag: "🇧🇫", flagUrl: "https://flagcdn.com/w40/bf.png" },
+            { name: "Burundi", flag: "🇧🇮", flagUrl: "https://flagcdn.com/w40/bi.png" },
+            { name: "Cabo Verde", flag: "🇨🇻", flagUrl: "https://flagcdn.com/w40/cv.png" },
+            { name: "Cambodia", flag: "🇰🇭", flagUrl: "https://flagcdn.com/w40/kh.png" },
+            { name: "Cameroon", flag: "🇨🇲", flagUrl: "https://flagcdn.com/w40/cm.png" },
+            { name: "Canada", flag: "🇨🇦", flagUrl: "https://flagcdn.com/w40/ca.png" },
+            { name: "Central African Republic", flag: "🇨🇫", flagUrl: "https://flagcdn.com/w40/cf.png" },
+            { name: "Chad", flag: "🇹🇩", flagUrl: "https://flagcdn.com/w40/td.png" },
+            { name: "Chile", flag: "🇨🇱", flagUrl: "https://flagcdn.com/w40/cl.png" },
+            { name: "China", flag: "🇨🇳", flagUrl: "https://flagcdn.com/w40/cn.png" },
+            { name: "Colombia", flag: "🇨🇴", flagUrl: "https://flagcdn.com/w40/co.png" },
+            { name: "Comoros", flag: "🇰🇲", flagUrl: "https://flagcdn.com/w40/km.png" },
+            { name: "Congo", flag: "🇨🇬", flagUrl: "https://flagcdn.com/w40/cg.png" },
+            { name: "Costa Rica", flag: "🇨🇷", flagUrl: "https://flagcdn.com/w40/cr.png" },
+            { name: "Côte d'Ivoire", flag: "🇨🇮", flagUrl: "https://flagcdn.com/w40/ci.png" },
+            { name: "Croatia", flag: "🇭🇷", flagUrl: "https://flagcdn.com/w40/hr.png" },
+            { name: "Cuba", flag: "🇨🇺", flagUrl: "https://flagcdn.com/w40/cu.png" },
+            { name: "Cyprus", flag: "🇨🇾", flagUrl: "https://flagcdn.com/w40/cy.png" },
+            { name: "Czech Republic", flag: "🇨🇿", flagUrl: "https://flagcdn.com/w40/cz.png" },
+            { name: "Democratic Republic of the Congo", flag: "🇨🇩", flagUrl: "https://flagcdn.com/w40/cd.png" },
+            { name: "Denmark", flag: "🇩🇰", flagUrl: "https://flagcdn.com/w40/dk.png" },
+            { name: "Djibouti", flag: "🇩🇯", flagUrl: "https://flagcdn.com/w40/dj.png" },
+            { name: "Dominica", flag: "🇩🇲", flagUrl: "https://flagcdn.com/w40/dm.png" },
+            { name: "Dominican Republic", flag: "🇩🇴", flagUrl: "https://flagcdn.com/w40/do.png" },
+            { name: "Ecuador", flag: "🇪🇨", flagUrl: "https://flagcdn.com/w40/ec.png" },
+            { name: "Egypt", flag: "🇪🇬", flagUrl: "https://flagcdn.com/w40/eg.png" },
+            { name: "El Salvador", flag: "🇸🇻", flagUrl: "https://flagcdn.com/w40/sv.png" },
+            { name: "Equatorial Guinea", flag: "🇬🇶", flagUrl: "https://flagcdn.com/w40/gq.png" },
+            { name: "Eritrea", flag: "🇪🇷", flagUrl: "https://flagcdn.com/w40/er.png" },
+            { name: "Estonia", flag: "🇪🇪", flagUrl: "https://flagcdn.com/w40/ee.png" },
+            { name: "Eswatini", flag: "🇸🇿", flagUrl: "https://flagcdn.com/w40/sz.png" },
+            { name: "Ethiopia", flag: "🇪🇹", flagUrl: "https://flagcdn.com/w40/et.png" },
+            { name: "Fiji", flag: "🇫🇯", flagUrl: "https://flagcdn.com/w40/fj.png" },
+            { name: "Finland", flag: "🇫🇮", flagUrl: "https://flagcdn.com/w40/fi.png" },
+            { name: "France", flag: "🇫🇷", flagUrl: "https://flagcdn.com/w40/fr.png" },
+            { name: "Gabon", flag: "🇬🇦", flagUrl: "https://flagcdn.com/w40/ga.png" },
+            { name: "Gambia", flag: "🇬🇲", flagUrl: "https://flagcdn.com/w40/gm.png" },
+            { name: "Georgia", flag: "🇬🇪", flagUrl: "https://flagcdn.com/w40/ge.png" },
+            { name: "Germany", flag: "🇩🇪", flagUrl: "https://flagcdn.com/w40/de.png" },
+            { name: "Ghana", flag: "🇬🇭", flagUrl: "https://flagcdn.com/w40/gh.png" },
+            { name: "Greece", flag: "🇬🇷", flagUrl: "https://flagcdn.com/w40/gr.png" },
+            { name: "Grenada", flag: "🇬🇩", flagUrl: "https://flagcdn.com/w40/gd.png" },
+            { name: "Guatemala", flag: "🇬🇹", flagUrl: "https://flagcdn.com/w40/gt.png" },
+            { name: "Guinea", flag: "🇬🇳", flagUrl: "https://flagcdn.com/w40/gn.png" },
+            { name: "Guinea-Bissau", flag: "🇬🇼", flagUrl: "https://flagcdn.com/w40/gw.png" },
+            { name: "Guyana", flag: "🇬🇾", flagUrl: "https://flagcdn.com/w40/gy.png" },
+            { name: "Haiti", flag: "🇭🇹", flagUrl: "https://flagcdn.com/w40/ht.png" },
+            { name: "Honduras", flag: "🇭🇳", flagUrl: "https://flagcdn.com/w40/hn.png" },
+            { name: "Hungary", flag: "🇭🇺", flagUrl: "https://flagcdn.com/w40/hu.png" },
+            { name: "Iceland", flag: "🇮🇸", flagUrl: "https://flagcdn.com/w40/is.png" },
+            { name: "India", flag: "🇮🇳", flagUrl: "https://flagcdn.com/w40/in.png" },
+            { name: "Indonesia", flag: "🇮🇩", flagUrl: "https://flagcdn.com/w40/id.png" },
+            { name: "Iran", flag: "🇮🇷", flagUrl: "https://flagcdn.com/w40/ir.png" },
+            { name: "Iraq", flag: "🇮🇶", flagUrl: "https://flagcdn.com/w40/iq.png" },
+            { name: "Ireland", flag: "🇮🇪", flagUrl: "https://flagcdn.com/w40/ie.png" },
+            { name: "Israel", flag: "🇮🇱", flagUrl: "https://flagcdn.com/w40/il.png" },
+            { name: "Italy", flag: "🇮🇹", flagUrl: "https://flagcdn.com/w40/it.png" },
+            { name: "Jamaica", flag: "🇯🇲", flagUrl: "https://flagcdn.com/w40/jm.png" },
+            { name: "Japan", flag: "🇯🇵", flagUrl: "https://flagcdn.com/w40/jp.png" },
+            { name: "Jordan", flag: "🇯🇴", flagUrl: "https://flagcdn.com/w40/jo.png" },
+            { name: "Kazakhstan", flag: "🇰🇿", flagUrl: "https://flagcdn.com/w40/kz.png" },
+            { name: "Kenya", flag: "🇰🇪", flagUrl: "https://flagcdn.com/w40/ke.png" },
+            { name: "Kiribati", flag: "🇰🇮", flagUrl: "https://flagcdn.com/w40/ki.png" },
+            { name: "Kuwait", flag: "🇰🇼", flagUrl: "https://flagcdn.com/w40/kw.png" },
+            { name: "Kyrgyzstan", flag: "🇰🇬", flagUrl: "https://flagcdn.com/w40/kg.png" },
+            { name: "Laos", flag: "🇱🇦", flagUrl: "https://flagcdn.com/w40/la.png" },
+            { name: "Latvia", flag: "🇱🇻", flagUrl: "https://flagcdn.com/w40/lv.png" },
+            { name: "Lebanon", flag: "🇱🇧", flagUrl: "https://flagcdn.com/w40/lb.png" },
+            { name: "Lesotho", flag: "🇱🇸", flagUrl: "https://flagcdn.com/w40/ls.png" },
+            { name: "Liberia", flag: "🇱🇷", flagUrl: "https://flagcdn.com/w40/lr.png" },
+            { name: "Libya", flag: "🇱🇾", flagUrl: "https://flagcdn.com/w40/ly.png" },
+            { name: "Liechtenstein", flag: "🇱🇮", flagUrl: "https://flagcdn.com/w40/li.png" },
+            { name: "Lithuania", flag: "🇱🇹", flagUrl: "https://flagcdn.com/w40/lt.png" },
+            { name: "Luxembourg", flag: "🇱🇺", flagUrl: "https://flagcdn.com/w40/lu.png" },
+            { name: "Madagascar", flag: "🇲🇬", flagUrl: "https://flagcdn.com/w40/mg.png" },
+            { name: "Malawi", flag: "🇲🇼", flagUrl: "https://flagcdn.com/w40/mw.png" },
+            { name: "Malaysia", flag: "🇲🇾", flagUrl: "https://flagcdn.com/w40/my.png" },
+            { name: "Maldives", flag: "🇲🇻", flagUrl: "https://flagcdn.com/w40/mv.png" },
+            { name: "Mali", flag: "🇲🇱", flagUrl: "https://flagcdn.com/w40/ml.png" },
+            { name: "Malta", flag: "🇲🇹", flagUrl: "https://flagcdn.com/w40/mt.png" },
+            { name: "Marshall Islands", flag: "🇲🇭", flagUrl: "https://flagcdn.com/w40/mh.png" },
+            { name: "Mauritania", flag: "🇲🇷", flagUrl: "https://flagcdn.com/w40/mr.png" },
+            { name: "Mauritius", flag: "🇲🇺", flagUrl: "https://flagcdn.com/w40/mu.png" },
+            { name: "Mexico", flag: "🇲🇽", flagUrl: "https://flagcdn.com/w40/mx.png" },
+            { name: "Micronesia", flag: "🇫🇲", flagUrl: "https://flagcdn.com/w40/fm.png" },
+            { name: "Moldova", flag: "🇲🇩", flagUrl: "https://flagcdn.com/w40/md.png" },
+            { name: "Monaco", flag: "🇲🇨", flagUrl: "https://flagcdn.com/w40/mc.png" },
+            { name: "Mongolia", flag: "🇲🇳", flagUrl: "https://flagcdn.com/w40/mn.png" },
+            { name: "Montenegro", flag: "🇲🇪", flagUrl: "https://flagcdn.com/w40/me.png" },
+            { name: "Morocco", flag: "🇲🇦", flagUrl: "https://flagcdn.com/w40/ma.png" },
+            { name: "Mozambique", flag: "🇲🇿", flagUrl: "https://flagcdn.com/w40/mz.png" },
+            { name: "Myanmar", flag: "🇲🇲", flagUrl: "https://flagcdn.com/w40/mm.png" },
+            { name: "Namibia", flag: "🇳🇦", flagUrl: "https://flagcdn.com/w40/na.png" },
+            { name: "Nauru", flag: "🇳🇷", flagUrl: "https://flagcdn.com/w40/nr.png" },
+            { name: "Nepal", flag: "🇳🇵", flagUrl: "https://flagcdn.com/w40/np.png" },
+            { name: "Netherlands", flag: "🇳🇱", flagUrl: "https://flagcdn.com/w40/nl.png" },
+            { name: "New Zealand", flag: "🇳🇿", flagUrl: "https://flagcdn.com/w40/nz.png" },
+            { name: "Nicaragua", flag: "🇳🇮", flagUrl: "https://flagcdn.com/w40/ni.png" },
+            { name: "Niger", flag: "🇳🇪", flagUrl: "https://flagcdn.com/w40/ne.png" },
+            { name: "Nigeria", flag: "🇳🇬", flagUrl: "https://flagcdn.com/w40/ng.png" },
+            { name: "North Korea", flag: "🇰🇵", flagUrl: "https://flagcdn.com/w40/kp.png" },
+            { name: "North Macedonia", flag: "🇲🇰", flagUrl: "https://flagcdn.com/w40/mk.png" },
+            { name: "Norway", flag: "🇳🇴", flagUrl: "https://flagcdn.com/w40/no.png" },
+            { name: "Oman", flag: "🇴🇲", flagUrl: "https://flagcdn.com/w40/om.png" },
+            { name: "Pakistan", flag: "🇵🇰", flagUrl: "https://flagcdn.com/w40/pk.png" },
+            { name: "Palau", flag: "🇵🇼", flagUrl: "https://flagcdn.com/w40/pw.png" },
+            { name: "Panama", flag: "🇵🇦", flagUrl: "https://flagcdn.com/w40/pa.png" },
+            { name: "Papua New Guinea", flag: "🇵🇬", flagUrl: "https://flagcdn.com/w40/pg.png" },
+            { name: "Paraguay", flag: "🇵🇾", flagUrl: "https://flagcdn.com/w40/py.png" },
+            { name: "Peru", flag: "🇵🇪", flagUrl: "https://flagcdn.com/w40/pe.png" },
+            { name: "Philippines", flag: "🇵🇭", flagUrl: "https://flagcdn.com/w40/ph.png" },
+            { name: "Poland", flag: "🇵🇱", flagUrl: "https://flagcdn.com/w40/pl.png" },
+            { name: "Portugal", flag: "🇵🇹", flagUrl: "https://flagcdn.com/w40/pt.png" },
+            { name: "Qatar", flag: "🇶🇦", flagUrl: "https://flagcdn.com/w40/qa.png" },
+            { name: "Romania", flag: "🇷🇴", flagUrl: "https://flagcdn.com/w40/ro.png" },
+            { name: "Russia", flag: "🇷🇺", flagUrl: "https://flagcdn.com/w40/ru.png" },
+            { name: "Rwanda", flag: "🇷🇼", flagUrl: "https://flagcdn.com/w40/rw.png" },
+            { name: "Saint Kitts and Nevis", flag: "🇰🇳", flagUrl: "https://flagcdn.com/w40/kn.png" },
+            { name: "Saint Lucia", flag: "🇱🇨", flagUrl: "https://flagcdn.com/w40/lc.png" },
+            { name: "Saint Vincent and the Grenadines", flag: "🇻🇨", flagUrl: "https://flagcdn.com/w40/vc.png" },
+            { name: "Samoa", flag: "🇼🇸", flagUrl: "https://flagcdn.com/w40/ws.png" },
+            { name: "San Marino", flag: "🇸🇲", flagUrl: "https://flagcdn.com/w40/sm.png" },
+            { name: "São Tomé and Príncipe", flag: "🇸🇹", flagUrl: "https://flagcdn.com/w40/st.png" },
+            { name: "Saudi Arabia", flag: "🇸🇦", flagUrl: "https://flagcdn.com/w40/sa.png" },
+            { name: "Senegal", flag: "🇸🇳", flagUrl: "https://flagcdn.com/w40/sn.png" },
+            { name: "Serbia", flag: "🇷🇸", flagUrl: "https://flagcdn.com/w40/rs.png" },
+            { name: "Seychelles", flag: "🇸🇨", flagUrl: "https://flagcdn.com/w40/sc.png" },
+            { name: "Sierra Leone", flag: "🇸🇱", flagUrl: "https://flagcdn.com/w40/sl.png" },
+            { name: "Singapore", flag: "🇸🇬", flagUrl: "https://flagcdn.com/w40/sg.png" },
+            { name: "Slovakia", flag: "🇸🇰", flagUrl: "https://flagcdn.com/w40/sk.png" },
+            { name: "Slovenia", flag: "🇸🇮", flagUrl: "https://flagcdn.com/w40/si.png" },
+            { name: "Solomon Islands", flag: "🇸🇧", flagUrl: "https://flagcdn.com/w40/sb.png" },
+            { name: "Somalia", flag: "🇸🇴", flagUrl: "https://flagcdn.com/w40/so.png" },
+            { name: "South Africa", flag: "🇿🇦", flagUrl: "https://flagcdn.com/w40/za.png" },
+            { name: "South Korea", flag: "🇰🇷", flagUrl: "https://flagcdn.com/w40/kr.png" },
+            { name: "South Sudan", flag: "🇸🇸", flagUrl: "https://flagcdn.com/w40/ss.png" },
+            { name: "Spain", flag: "🇪🇸", flagUrl: "https://flagcdn.com/w40/es.png" },
+            { name: "Sri Lanka", flag: "🇱🇰", flagUrl: "https://flagcdn.com/w40/lk.png" },
+            { name: "Sudan", flag: "🇸🇩", flagUrl: "https://flagcdn.com/w40/sd.png" },
+            { name: "Suriname", flag: "🇸🇷", flagUrl: "https://flagcdn.com/w40/sr.png" },
+            { name: "Sweden", flag: "🇸🇪", flagUrl: "https://flagcdn.com/w40/se.png" },
+            { name: "Switzerland", flag: "🇨🇭", flagUrl: "https://flagcdn.com/w40/ch.png" },
+            { name: "Syria", flag: "🇸🇾", flagUrl: "https://flagcdn.com/w40/sy.png" },
+            { name: "Tajikistan", flag: "🇹🇯", flagUrl: "https://flagcdn.com/w40/tj.png" },
+            { name: "Tanzania", flag: "🇹🇿", flagUrl: "https://flagcdn.com/w40/tz.png" },
+            { name: "Thailand", flag: "🇹🇭", flagUrl: "https://flagcdn.com/w40/th.png" },
+            { name: "Timor-Leste", flag: "🇹🇱", flagUrl: "https://flagcdn.com/w40/tl.png" },
+            { name: "Togo", flag: "🇹🇬", flagUrl: "https://flagcdn.com/w40/tg.png" },
+            { name: "Tonga", flag: "🇹🇴", flagUrl: "https://flagcdn.com/w40/to.png" },
+            { name: "Trinidad and Tobago", flag: "🇹🇹", flagUrl: "https://flagcdn.com/w40/tt.png" },
+            { name: "Tunisia", flag: "🇹🇳", flagUrl: "https://flagcdn.com/w40/tn.png" },
+            { name: "Turkey", flag: "🇹🇷", flagUrl: "https://flagcdn.com/w40/tr.png" },
+            { name: "Turkmenistan", flag: "🇹🇲", flagUrl: "https://flagcdn.com/w40/tm.png" },
+            { name: "Tuvalu", flag: "🇹🇻", flagUrl: "https://flagcdn.com/w40/tv.png" },
+            { name: "Uganda", flag: "🇺🇬", flagUrl: "https://flagcdn.com/w40/ug.png" },
+            { name: "Ukraine", flag: "🇺🇦", flagUrl: "https://flagcdn.com/w40/ua.png" },
+            { name: "United Arab Emirates", flag: "🇦🇪", flagUrl: "https://flagcdn.com/w40/ae.png" },
+            { name: "United Kingdom", flag: "🇬🇧", flagUrl: "https://flagcdn.com/w40/gb.png" },
+            { name: "United States", flag: "🇺🇸", flagUrl: "https://flagcdn.com/w40/us.png" },
+            { name: "Uruguay", flag: "🇺🇾", flagUrl: "https://flagcdn.com/w40/uy.png" },
+            { name: "Uzbekistan", flag: "🇺🇿", flagUrl: "https://flagcdn.com/w40/uz.png" },
+            { name: "Vanuatu", flag: "🇻🇺", flagUrl: "https://flagcdn.com/w40/vu.png" },
+            { name: "Venezuela", flag: "🇻🇪", flagUrl: "https://flagcdn.com/w40/ve.png" },
+            { name: "Vietnam", flag: "🇻🇳", flagUrl: "https://flagcdn.com/w40/vn.png" },
+            { name: "Yemen", flag: "🇾🇪", flagUrl: "https://flagcdn.com/w40/ye.png" },
+            { name: "Zambia", flag: "🇿🇲", flagUrl: "https://flagcdn.com/w40/zm.png" },
+            { name: "Zimbabwe", flag: "🇿🇼", flagUrl: "https://flagcdn.com/w40/zw.png" },
+            { name: "Holy See", flag: "🇻🇦", flagUrl: "https://flagcdn.com/w40/va.png" },
+            { name: "State of Palestine", flag: "🇵🇸", flagUrl: "https://flagcdn.com/w40/ps.png" }
+        ];
+
+        // ==========================================
+        // COUNTRY AUTOCOMPLETE
+        // ==========================================
+        countryInput.addEventListener('input', function () {
+            const query = this.value.toLowerCase().trim();
+            if (query.length === 0) {
+                countrySuggestions.classList.remove('active');
+                return;
+            }
+            const filtered = countries.filter(c => c.name.toLowerCase().includes(query));
+            if (filtered.length === 0) {
+                countrySuggestions.classList.remove('active');
+                return;
+            }
+            countrySuggestions.innerHTML = filtered.map(c => `
+                <div class="suggestion-item" data-name="${c.name}" data-flag="${c.flag}" data-flag-url="${c.flagUrl}">
+                    <img src="${c.flagUrl}" alt="${c.name} flag" class="flag-image">
+                    ${c.name}
+                </div>
+            `).join('');
+            countrySuggestions.classList.add('active');
+
+            countrySuggestions.querySelectorAll('.suggestion-item').forEach(item => {
+                item.addEventListener('click', function () {
+                    const name = this.dataset.name;
+                    const flag = this.dataset.flag;
+                    const flagUrl = this.dataset.flagUrl;
+                    countryInput.value = name;
+                    selectedCountry = { name, flag, flagUrl };
+                    countrySuggestions.classList.remove('active');
+                    renderFlagPreview(name, flag, flagUrl);
+                });
+            });
+        });
+
+        document.addEventListener('click', function (e) {
+            if (!e.target.closest('.country-input-wrapper')) {
+                countrySuggestions.classList.remove('active');
+            }
+        });
+
+        function renderFlagPreview(name, flag, flagUrl) {
+            const existing = imagePreview.querySelector('.flag-row');
+            const flagHtml = `
+                <div class="flag-row" style="display:flex; align-items:center; gap:12px; padding:8px; background:var(--bg-body); border-radius:8px; border:1px solid var(--border); margin-bottom:8px;">
+                    <img src="${flagUrl}" alt="${name} flag" style="width:40px; height:26px; object-fit:cover; border-radius:4px; border:1px solid var(--border);">
+                    <div>
+                        <div style="font-weight:600;">${name}</div>
+                        <div style="font-size:0.8rem; color:var(--text-secondary);">Flag will be used as default image</div>
+                    </div>
+                </div>`;
+            if (existing) {
+                existing.outerHTML = flagHtml;
+            } else {
+                imagePreview.insertAdjacentHTML('afterbegin', flagHtml);
+            }
+        }
+
+        // ==========================================
+        // OTHER VISA TYPE / DURATION TOGGLE
+        // ==========================================
+        visaTypeInput.addEventListener('change', function () {
+            otherVisaGroup.style.display = this.value === 'Other' ? 'block' : 'none';
+        });
+
+        durationInput.addEventListener('change', function () {
+            otherDurationGroup.style.display = this.value === 'Other' ? 'block' : 'none';
+        });
+
+        // ==========================================
+        // IMAGE SELECTION
+        // ==========================================
+        imageInput.addEventListener('change', function () {
+            const incoming = Array.from(this.files);
+
+            if (incoming.length === 0) return;
+
+            const combined = [...selectedFiles, ...incoming];
+            if (combined.length > 5) {
+                alert('You can select a maximum of 5 images in total. Extra files have been ignored.');
+                const slots = 5 - selectedFiles.length;
+                if (slots <= 0) {
+                    this.value = '';
+                    return;
+                }
+                selectedFiles = [...selectedFiles, ...incoming.slice(0, slots)];
+            } else {
+                selectedFiles = combined;
+            }
+
+            this.value = '';
+            rebuildPreviewGrid();
+            updateUploadStatus();
+        });
+
+        function rebuildPreviewGrid() {
+            const oldGrid = imagePreview.querySelector('.preview-grid');
+            if (oldGrid) oldGrid.remove();
+
+            if (selectedFiles.length === 0) return;
+
+            const grid = document.createElement('div');
+            grid.className = 'preview-grid';
+
+            const snapshot = selectedFiles.slice();
+
+            snapshot.forEach((file, idx) => {
+                const item = document.createElement('div');
+                item.className = 'preview-item';
+                item.dataset.idx = idx;
+
+                const img = document.createElement('img');
+                img.alt = file.name;
+
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+
+                const removeBtn = document.createElement('button');
+                removeBtn.type = 'button';
+                removeBtn.className = 'remove-btn';
+                removeBtn.innerHTML = '&times;';
+                removeBtn.title = 'Remove this image';
+                removeBtn.addEventListener('click', function () {
+                    selectedFiles = selectedFiles.filter(f => f !== file);
+                    rebuildPreviewGrid();
+                    updateUploadStatus();
+                });
+
+                item.appendChild(img);
+                item.appendChild(removeBtn);
+                grid.appendChild(item);
+            });
+
+            imagePreview.appendChild(grid);
+        }
+
+        function updateUploadStatus() {
+            if (selectedFiles.length === 0) {
+                uploadStatus.innerHTML = '';
+            } else {
+                uploadStatus.innerHTML = `<span style="color:var(--text-secondary);"><i class="fas fa-info-circle"></i> ${selectedFiles.length} image(s) selected. Will be uploaded when you save.</span>`;
+            }
+        }
+
+        // ==========================================
+        // CANCEL BUTTON
+        // ==========================================
+        cancelBtn.addEventListener('click', resetForm);
+
+        function resetForm() {
+            visaForm.reset();
+            editId.value = '';
+            formTitle.textContent = 'Add New Visa Country';
+            submitBtn.textContent = 'Save Visa';
+            otherVisaGroup.style.display = 'none';
+            otherDurationGroup.style.display = 'none';
+            uploadedImageUrls = [];
+            selectedFiles = [];
+            imageInput.value = '';
+            imagePreview.innerHTML = '';
+            uploadStatus.innerHTML = '';
+            selectedCountry = null;
+            submitBtn.disabled = false;
+            successMessage.classList.remove('active');
+        }
+
+        // ==========================================
+        // RENDER TABLE
+        // ==========================================
+        function renderTable(data) {
+            if (data.length === 0) {
+                visaTableBody.innerHTML = `
+                    <tr>
+                        <td colspan="7">
+                            <div class="empty-state">
+                                <i class="fas fa-globe"></i>
+                                <p>No visa countries found matching your criteria.</p>
+                            </div>
+                        </td>
+                    </tr>`;
+                return;
+            }
+
+            let html = '';
+            data.forEach(visa => {
+                const statusLabel = visa.status === 'available' ? 'Available' : 'Unavailable';
+                const statusClass = visa.status === 'available' ? 'available' : 'unavailable';
+                const price = visa.price ? `₦${Number(visa.price).toLocaleString()}` : '—';
+
+                let flagHtml = '';
+                if (visa.country) {
+                    const countryData = countries.find(c => c.name === visa.country);
+                    if (countryData && countryData.flagUrl) {
+                        flagHtml = `<img src="${countryData.flagUrl}" alt="${visa.country} flag" class="flag-image" onerror="this.style.display='none';this.parentElement.innerHTML='<span class=\\'flag-fallback\\'>${visa.flag || '🌍'}</span>'">`;
+                    } else {
+                        flagHtml = `<span class="flag-fallback">${visa.flag || '🌍'}</span>`;
+                    }
+                } else {
+                    flagHtml = `<span class="flag-fallback">🌍</span>`;
+                }
+
+                html += `
+                    <tr>
+                        <td>${flagHtml}</td>
+                        <td><strong>${visa.country || 'Unknown'}</strong></td>
+                        <td>${visa.visaType || '—'}</td>
+                        <td>${visa.duration || '—'}</td>
+                        <td>${price}</td>
+                        <td>
+                            <div class="status-toggle">
+                                <div class="toggle-switch ${visa.status === 'available' ? 'active' : ''}"
+                                     data-id="${visa.id}"
+                                     data-status="${visa.status || 'unavailable'}">
+                                    <div class="toggle-knob"></div>
+                                </div>
+                                <span class="status-label ${statusClass}">${statusLabel}</span>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="btn-icon edit" data-id="${visa.id}" title="Edit">
+                                    <i class="fas fa-pen"></i>
+                                </button>
+                                <button class="btn-icon delete" data-id="${visa.id}" title="Delete">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>`;
+            });
+            visaTableBody.innerHTML = html;
+
+            document.querySelectorAll('.toggle-switch').forEach(toggle => {
+                toggle.addEventListener('click', async function () {
+                    const id = this.dataset.id;
+                    const newStatus = this.dataset.status === 'available' ? 'unavailable' : 'available';
+                    try {
+                        await db.collection('visa-countries').doc(id).update({
+                            status: newStatus,
+                            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+                        loadVisas();
+                        showToast('Visa country status updated successfully.');
+                    } catch (error) {
+                        console.error('Error toggling status:', error);
+                        showToast('Error updating status.', true);
+                    }
+                });
+            });
+
+            document.querySelectorAll('.btn-icon.edit').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    const visa = allVisas.find(v => v.id === this.dataset.id);
+                    if (visa) editVisa(visa);
+                });
+            });
+
+            document.querySelectorAll('.btn-icon.delete').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    const id = this.dataset.id;
+                    if (confirm('Are you sure you want to delete this visa country? This action cannot be undone.')) {
+                        deleteVisa(id);
+                    }
+                });
+            });
+        }
+
+        // ==========================================
+        // EDIT VISA
+        // ==========================================
+        function editVisa(visa) {
+            formTitle.textContent = 'Edit Visa Country';
+            submitBtn.textContent = 'Update Visa';
+            editId.value = visa.id;
+
+            countryInput.value = visa.country || '';
+            selectedCountry = visa.flag ? { name: visa.country, flag: visa.flag } : null;
+
+            if (visa.country) {
+                const countryData = countries.find(c => c.name === visa.country);
+                const flagUrl = countryData ? countryData.flagUrl : null;
+                if (flagUrl) {
+                    renderFlagPreview(visa.country, visa.flag || '🌍', flagUrl);
+                }
+            }
+
+            visaTypeInput.value = visa.visaType || '';
+            if (visa.visaType === 'Other') {
+                otherVisaGroup.style.display = 'block';
+                otherVisaInput.value = visa.customVisaType || '';
+            }
+            priceInput.value = visa.price || '';
+            durationInput.value = visa.duration || '';
+            if (visa.duration === 'Other') {
+                otherDurationGroup.style.display = 'block';
+                otherDurationInput.value = visa.customDuration || '';
+            }
+            descriptionInput.value = visa.description || '';
+            statusInput.value = visa.status || 'available';
+
+            uploadedImageUrls = visa.images || (visa.image ? [visa.image] : []);
+            selectedFiles = [];
+
+            if (uploadedImageUrls.length > 0) {
+                const grid = document.createElement('div');
+                grid.className = 'preview-grid';
+                uploadedImageUrls.forEach(url => {
+                    const item = document.createElement('div');
+                    item.className = 'preview-item';
+                    const img = document.createElement('img');
+                    img.src = url;
+                    img.alt = 'Saved image';
+                    item.appendChild(img);
+                    grid.appendChild(item);
+                });
+                imagePreview.appendChild(grid);
+                uploadStatus.innerHTML = `<span class="success"><i class="fas fa-check-circle"></i> ${uploadedImageUrls.length} image(s) already saved. Upload new files to replace them.</span>`;
+            }
+
+            document.querySelector('.form-container').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // ==========================================
+        // DELETE VISA
+        // ==========================================
+        async function deleteVisa(id) {
+            try {
+                await db.collection('visa-countries').doc(id).delete();
+                loadVisas();
+                showToast('Visa country has been deleted successfully.');
+            } catch (error) {
+                console.error('Error deleting visa:', error);
+                showToast('Error deleting visa. Please try again.', true);
+            }
+        }
+
+        // ==========================================
+        // UPLOAD ALL IMAGES TO CLOUDINARY
+        // ==========================================
+        async function uploadImagesToCloudinary(files) {
+            const uploadedUrls = [];
+
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+
+                uploadStatus.innerHTML = `<span class="loading"><i class="fas fa-spinner fa-spin"></i> Uploading image ${i + 1} of ${files.length}...</span>`;
+
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+
+                const response = await fetch(
+                    `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
+                    { method: 'POST', body: formData }
+                );
+
+                if (!response.ok) {
+                    const errText = await response.text();
+                    throw new Error(`Cloudinary upload failed for image ${i + 1}: ${errText}`);
+                }
+
+                const data = await response.json();
+
+                if (!data.secure_url) {
+                    throw new Error(`Cloudinary did not return a URL for image ${i + 1}`);
+                }
+
+                uploadedUrls.push(data.secure_url);
+            }
+
+            return uploadedUrls;
+        }
+
+        // ==========================================
+        // FORM SUBMIT
+        // ==========================================
+        visaForm.addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Saving...';
+
+            try {
+                const country = countryInput.value.trim();
+                if (!country) {
+                    alert('Please select a country.');
+                    return;
+                }
+
+                const flag = selectedCountry ? selectedCountry.flag : '🌍';
+
+                let visaType = visaTypeInput.value;
+                if (!visaType) {
+                    alert('Please select a visa type.');
+                    return;
+                }
+                if (visaType === 'Other') {
+                    const custom = otherVisaInput.value.trim();
+                    if (!custom) { alert('Please specify the visa type.'); return; }
+                    visaType = custom;
+                }
+
+                let duration = durationInput.value;
+                if (!duration) {
+                    alert('Please select a processing duration.');
+                    return;
+                }
+                if (duration === 'Other') {
+                    const custom = otherDurationInput.value.trim();
+                    if (!custom) { alert('Please specify the duration.'); return; }
+                    duration = custom;
+                }
+
+                const price = parseFloat(priceInput.value);
+                if (isNaN(price) || price < 0) {
+                    alert('Please enter a valid price.');
+                    return;
+                }
+
+                let finalImageUrls = [];
+
+                if (selectedFiles.length > 0) {
+                    try {
+                        finalImageUrls = await uploadImagesToCloudinary(selectedFiles);
+                        uploadStatus.innerHTML = `<span class="success"><i class="fas fa-check-circle"></i> ${finalImageUrls.length} image(s) uploaded successfully!</span>`;
+                    } catch (uploadError) {
+                        console.error('Cloudinary upload error:', uploadError);
+                        uploadStatus.innerHTML = `<span class="error"><i class="fas fa-exclamation-circle"></i> Upload failed: ${uploadError.message}</span>`;
+                        return;
+                    }
+                } else if (uploadedImageUrls.length > 0) {
+                    finalImageUrls = uploadedImageUrls;
+                } else {
+                    alert('Please upload at least one image.');
+                    return;
+                }
+
+                const docData = {
+                    country,
+                    flag,
+                    visaType,
+                    duration,
+                    price,
+                    description: descriptionInput.value.trim() || '',
+                    status: statusInput.value,
+                    image: finalImageUrls[0],
+                    images: finalImageUrls,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                };
+
+                if (editId.value) {
+                    await db.collection('visa-countries').doc(editId.value).update(docData);
+                    showToast('Visa country has been updated successfully.');
+                } else {
+                    docData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+                    await db.collection('visa-countries').add(docData);
+                    showToast('Visa country has been added successfully.');
+                }
+
+                resetForm();
+                loadVisas();
+
+            } catch (error) {
+                console.error('Error saving visa:', error);
+                showToast('Error saving visa: ' + error.message, true);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = editId.value ? 'Update Visa' : 'Save Visa';
+            }
+        });
+
+        // ==========================================
+        // SUCCESS MESSAGE
+        // ==========================================
+        function showSuccess(message) {
+            successText.textContent = message;
+            successMessage.classList.add('active');
+            setTimeout(() => successMessage.classList.remove('active'), 5000);
+        }
+
+        // ==========================================
+        // SEARCH & FILTER
+        // ==========================================
+        function applyFiltersAndRender() {
+            const query = searchInput.value.toLowerCase().trim();
+            const statusFilter = filterStatus.value;
+
+            let filtered = allVisas;
+
+            if (query) {
+                filtered = filtered.filter(visa =>
+                    (visa.country && visa.country.toLowerCase().includes(query)) ||
+                    (visa.visaType && visa.visaType.toLowerCase().includes(query)) ||
+                    (visa.status && visa.status.toLowerCase().includes(query)) ||
+                    (visa.price && visa.price.toString().includes(query))
+                );
+            }
+
+            if (statusFilter !== 'all') {
+                filtered = filtered.filter(visa => visa.status === statusFilter);
+            }
+
+            renderTable(filtered);
+        }
+
+        searchInput.addEventListener('input', applyFiltersAndRender);
+        filterStatus.addEventListener('change', applyFiltersAndRender);
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,1639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Applications — GeepChris Bridge Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        /* ===== Same as before, keeping all existing styles ===== */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg-body: #f8fafc;
+            --bg-card: #ffffff;
+            --bg-sidebar: #020617;
+            --text-primary: #0f172a;
+            --text-secondary: #64748b;
+            --text-sidebar: #ffffff;
+            --border: #e2e8f0;
+            --green: #16a34a;
+            --green-light: #22c55e;
+            --red: #dc2626;
+            --shadow: 0 1px 3px rgba(0,0,0,0.06);
+            --shadow-lg: 0 4px 12px rgba(0,0,0,0.08);
+            --radius: 12px;
+            --sidebar-width: 260px;
+        }
+
+        html, body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-body);
+            color: var(--text-primary);
+            height: 100%;
+            overflow-x: hidden;
+        }
+
+        body { display: flex; min-height: 100vh; }
+
+        /* ===== SIDEBAR ===== */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: var(--bg-sidebar);
+            color: var(--text-sidebar);
+            min-height: 100vh;
+            padding: 24px 16px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow-y: auto;
+        }
+        .sidebar .logo { display: flex; align-items: center; gap: 12px; margin-bottom: 32px; padding-bottom: 16px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+        .sidebar .logo img { height: 40px; width: auto; }
+        .sidebar .logo .logo-fallback { font-size: 1.1rem; font-weight: 800; color: #fff; }
+        .sidebar .logo .logo-fallback span { color: var(--green-light); }
+        .sidebar .nav { list-style: none; flex: 1; }
+        .sidebar .nav li { margin-bottom: 2px; }
+        .sidebar .nav a { display: flex; align-items: center; gap: 14px; padding: 12px 14px; border-radius: var(--radius); color: rgba(255,255,255,0.6); text-decoration: none; font-weight: 500; font-size: 0.9rem; transition: all 0.2s ease; }
+        .sidebar .nav a:hover { background: rgba(255,255,255,0.08); color: #fff; }
+        .sidebar .nav a.active { background: rgba(34,197,94,0.15); color: var(--green-light); }
+        .sidebar .nav a i { width: 20px; text-align: center; font-size: 1.1rem; }
+        .sidebar .user-section { padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.08); margin-top: auto; }
+        .sidebar .user-section .user-info { display: flex; align-items: center; gap: 12px; padding: 10px 14px; }
+        .sidebar .user-section .user-avatar { 
+            width: 38px; 
+            height: 38px; 
+            border-radius: 50%; 
+            background: var(--green); 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-weight: 700; 
+            font-size: 0.9rem; 
+            color: #fff; 
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+        .sidebar .user-section .user-avatar img { 
+            width: 100%; 
+            height: 100%; 
+            border-radius: 50%; 
+            object-fit: cover; 
+        }
+        .sidebar .user-section .user-name { font-size: 0.85rem; font-weight: 600; color: #fff; }
+        .sidebar .user-section .user-role { font-size: 0.75rem; color: rgba(255,255,255,0.5); }
+        .sidebar .user-section .logout-btn { display: flex; width: 100%; padding: 10px 14px; border: none; border-radius: var(--radius); background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.6); font-weight: 500; font-size: 0.85rem; cursor: pointer; transition: 0.2s; text-align: left; margin-top: 8px; align-items: center; gap: 10px; font-family: 'Inter', sans-serif; }
+        .sidebar .user-section .logout-btn:hover { background: rgba(220,38,38,0.2); color: var(--red); }
+
+        /* ===== MAIN CONTENT ===== */
+        .main-content { margin-left: var(--sidebar-width); flex: 1; padding: 24px 32px; min-height: 100vh; width: calc(100% - var(--sidebar-width)); }
+
+        /* ===== TOP BAR ===== */
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+            background: var(--bg-card);
+            padding: 16px 24px;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+        }
+        .topbar .page-title h1 { font-size: 1.5rem; font-weight: 700; color: var(--text-primary); }
+        .topbar .page-title p { font-size: 0.85rem; color: var(--text-secondary); margin-top: 2px; }
+        .topbar .topbar-actions { display: flex; align-items: center; gap: 16px; }
+        .topbar .topbar-actions .notification-bell { position: relative; font-size: 1.2rem; cursor: pointer; color: var(--text-secondary); transition: 0.2s; }
+        .topbar .topbar-actions .notification-bell:hover { color: var(--text-primary); }
+        .topbar .topbar-actions .notification-bell .badge { position: absolute; top: -4px; right: -4px; width: 18px; height: 18px; background: var(--green); border-radius: 50%; font-size: 0.6rem; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; }
+        .topbar .topbar-actions .menu-toggle { display: none; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-primary); padding: 4px; transition: 0.3s; }
+        .topbar .topbar-actions .menu-toggle:hover { color: var(--green); }
+
+        /* ===== HAMBURGER ANIMATION ===== */
+        .hamburger { width: 28px; height: 20px; position: relative; cursor: pointer; display: flex; flex-direction: column; justify-content: space-between; }
+        .hamburger span { display: block; width: 100%; height: 2.5px; background: var(--text-primary); border-radius: 4px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); transform-origin: center; }
+        .hamburger.active span:nth-child(1) { transform: translateY(8.75px) rotate(45deg); }
+        .hamburger.active span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+        .hamburger.active span:nth-child(3) { transform: translateY(-8.75px) rotate(-45deg); }
+
+        /* ===== TABS ===== */
+        .tabs-container {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px 24px 24px;
+            box-shadow: var(--shadow);
+            margin-bottom: 24px;
+        }
+
+        .tabs-header {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 12px;
+            margin-bottom: 20px;
+        }
+
+        .tabs-header .tab-btn {
+            padding: 8px 18px;
+            border: none;
+            background: transparent;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: 0.2s;
+            border-radius: 8px;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .tabs-header .tab-btn:hover {
+            color: var(--text-primary);
+            background: var(--bg-body);
+        }
+
+        .tabs-header .tab-btn.active {
+            color: var(--green);
+            background: rgba(22,163,74,0.08);
+        }
+
+        .tabs-header .tab-btn .count {
+            display: inline-block;
+            background: var(--border);
+            color: var(--text-secondary);
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 0 8px;
+            border-radius: 999px;
+            margin-left: 4px;
+        }
+
+        .tabs-header .tab-btn.active .count {
+            background: rgba(22,163,74,0.15);
+            color: var(--green);
+        }
+
+        .tab-panel {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .tab-panel.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ===== TABLE ===== */
+        .table-container {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .table-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .table-toolbar .search-box {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--bg-body);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 4px 12px;
+            flex: 1 1 280px;
+        }
+
+        .table-toolbar .search-box i { color: var(--text-secondary); font-size: 0.9rem; }
+        .table-toolbar .search-box input { border: none; background: transparent; padding: 8px 0; font-size: 0.9rem; width: 100%; outline: none; font-family: 'Inter', sans-serif; }
+
+        .table-toolbar .status-filter {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .table-toolbar .status-filter label { font-size: 0.85rem; font-weight: 500; color: var(--text-secondary); }
+        .table-toolbar .status-filter select { padding: 8px 32px 8px 14px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg-body); font-family: 'Inter', sans-serif; font-size: 0.85rem; color: var(--text-primary); appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; cursor: pointer; }
+        .table-toolbar .status-filter select:focus { outline: none; border-color: var(--green); }
+
+        .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .table-container table { width: 100%; border-collapse: collapse; min-width: 800px; }
+        .table-container table thead { background: var(--bg-body); }
+        .table-container table thead th { padding: 10px 14px; text-align: left; font-size: 0.7rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; }
+        .table-container table tbody td { padding: 12px 14px; font-size: 0.85rem; border-bottom: 1px solid var(--border); }
+        .table-container table tbody tr:last-child td { border-bottom: none; }
+        .table-container table tbody tr:hover { background: var(--bg-body); }
+
+        /* ===== STATUS BADGES ===== */
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 999px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+        .status-badge.new { background: rgba(59,130,246,0.1); color: #3b82f6; }
+        .status-badge.processing { background: rgba(249,115,22,0.1); color: #f97316; }
+        .status-badge.completed { background: rgba(22,163,74,0.1); color: var(--green); }
+        .status-badge.rejected { background: rgba(220,38,38,0.1); color: var(--red); }
+        .status-badge.pending { background: rgba(234,179,8,0.1); color: #ca8a04; }
+        .status-badge.submitted { background: rgba(100,116,139,0.1); color: var(--text-secondary); }
+
+        /* ===== ACTION BUTTONS ===== */
+        .action-buttons { display: flex; gap: 6px; flex-wrap: wrap; }
+        .action-buttons .btn-sm { padding: 4px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.7rem; font-weight: 600; cursor: pointer; transition: 0.2s; background: transparent; font-family: 'Inter', sans-serif; }
+        .action-buttons .btn-sm.view { color: #3b82f6; border-color: #3b82f6; }
+        .action-buttons .btn-sm.view:hover { background: #3b82f6; color: #fff; }
+        .action-buttons .btn-sm.update { color: var(--green); border-color: var(--green); }
+        .action-buttons .btn-sm.update:hover { background: var(--green); color: #fff; }
+        .action-buttons .btn-sm.delete { color: var(--red); border-color: var(--red); }
+        .action-buttons .btn-sm.delete:hover { background: var(--red); color: #fff; }
+
+        /* ===== LOADING ===== */
+        .loading { display: flex; align-items: center; justify-content: center; padding: 40px 20px; color: var(--text-secondary); gap: 12px; }
+        .loading i { animation: spin 1s linear infinite; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        .empty-state { text-align: center; padding: 60px 20px; color: var(--text-secondary); }
+        .empty-state i { font-size: 3rem; color: var(--border); margin-bottom: 16px; display: block; }
+
+        /* ===== MODAL ===== */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .modal-overlay.active { display: flex; }
+
+        .modal-box {
+            background: var(--bg-card);
+            border-radius: 16px;
+            max-width: 800px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            animation: modalFade 0.25s ease;
+        }
+
+        @keyframes modalFade {
+            from { opacity: 0; transform: scale(0.96) translateY(12px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .modal-header h2 { font-size: 1.2rem; font-weight: 700; }
+        .modal-header .close-btn { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-secondary); transition: 0.2s; padding: 4px; }
+        .modal-header .close-btn:hover { color: var(--red); }
+
+        .modal-body { padding: 24px; }
+
+        .modal-body .detail-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .modal-body .detail-item { margin-bottom: 12px; }
+        .modal-body .detail-item .label { font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; }
+        .modal-body .detail-item .value { font-size: 0.95rem; font-weight: 500; color: var(--text-primary); margin-top: 2px; word-break: break-word; }
+
+        .modal-body .detail-item .value .file-link { color: #3b82f6; text-decoration: none; cursor: pointer; }
+        .modal-body .detail-item .value .file-link:hover { text-decoration: underline; }
+
+        .modal-body .detail-item .value .document-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+        .modal-body .detail-item .value .document-list .doc-tag { background: var(--bg-body); border: 1px solid var(--border); padding: 4px 12px; border-radius: 6px; font-size: 0.75rem; display: flex; align-items: center; gap: 6px; }
+
+        .modal-body .detail-item.full-width { grid-column: 1 / -1; }
+
+        .modal-footer {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 12px;
+            padding: 16px 24px;
+            border-top: 1px solid var(--border);
+            flex-wrap: wrap;
+        }
+
+        .modal-footer .status-select { padding: 8px 14px; border: 1px solid var(--border); border-radius: 8px; font-family: 'Inter', sans-serif; font-size: 0.85rem; background: var(--bg-body); }
+        .modal-footer .status-select:focus { outline: none; border-color: var(--green); }
+
+        .modal-footer .btn-update { padding: 8px 24px; border: none; border-radius: 8px; background: var(--green); color: #fff; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: 0.2s; font-family: 'Inter', sans-serif; }
+        .modal-footer .btn-update:hover { background: var(--green-light); }
+        .modal-footer .btn-update:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        .modal-footer .btn-close { padding: 8px 24px; border: 1px solid var(--border); border-radius: 8px; background: transparent; color: var(--text-secondary); font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: 0.2s; font-family: 'Inter', sans-serif; }
+        .modal-footer .btn-close:hover { background: var(--bg-body); }
+
+        /* ===== FILE VIEWER MODAL ===== */
+        .file-viewer-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(8px);
+            z-index: 10000;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+        }
+        .file-viewer-overlay.active { display: flex; }
+
+        .file-viewer-box {
+            background: var(--bg-card);
+            border-radius: 16px;
+            max-width: 900px;
+            width: 100%;
+            max-height: 90vh;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+            animation: modalFade 0.25s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .file-viewer-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+
+        .file-viewer-header h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .file-viewer-header .file-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .file-viewer-header .file-actions button {
+            padding: 6px 16px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: 0.2s;
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .file-viewer-header .file-actions .btn-download {
+            background: var(--green);
+            color: #fff;
+        }
+
+        .file-viewer-header .file-actions .btn-download:hover {
+            background: var(--green-light);
+        }
+
+        .file-viewer-header .file-actions .btn-close-viewer {
+            background: var(--border);
+            color: var(--text-secondary);
+        }
+
+        .file-viewer-header .file-actions .btn-close-viewer:hover {
+            background: var(--red);
+            color: #fff;
+        }
+
+        .file-viewer-body {
+            padding: 24px;
+            overflow-y: auto;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 300px;
+            background: #f1f5f9;
+        }
+
+        .file-viewer-body iframe,
+        .file-viewer-body img,
+        .file-viewer-body object {
+            max-width: 100%;
+            max-height: 70vh;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+        }
+
+        .file-viewer-body .file-preview-fallback {
+            text-align: center;
+            color: var(--text-secondary);
+        }
+
+        .file-viewer-body .file-preview-fallback i {
+            font-size: 4rem;
+            display: block;
+            margin-bottom: 16px;
+            color: var(--border);
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 992px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.open { transform: translateX(0); }
+            .main-content { margin-left: 0; width: 100%; padding: 16px 20px; }
+            .topbar .topbar-actions .menu-toggle { display: block; }
+        }
+
+        @media (max-width: 768px) {
+            .topbar { flex-direction: column; align-items: flex-start; gap: 12px; padding: 16px; }
+            .topbar .topbar-actions { width: 100%; justify-content: space-between; }
+            .tabs-container { padding: 16px; }
+            .tabs-header { gap: 2px; }
+            .tabs-header .tab-btn { font-size: 0.75rem; padding: 6px 12px; }
+            .modal-body .detail-grid { grid-template-columns: 1fr; }
+            .table-toolbar { flex-direction: column; align-items: stretch; }
+            .modal-box { max-width: 100%; margin: 10px; }
+            .modal-footer { flex-direction: column; align-items: stretch; }
+            .modal-footer .btn-update, .modal-footer .btn-close { width: 100%; text-align: center; }
+            .file-viewer-overlay { padding: 16px; }
+            .file-viewer-header { flex-direction: column; gap: 12px; align-items: stretch; }
+            .file-viewer-header .file-actions { justify-content: center; }
+            .file-viewer-body { min-height: 200px; }
+            .file-viewer-body iframe,
+            .file-viewer-body img,
+            .file-viewer-body object { max-height: 50vh; }
+        }
+
+        @media (max-width: 480px) {
+            .main-content { padding: 12px 16px; }
+            .topbar .page-title h1 { font-size: 1.2rem; }
+            .tabs-header .tab-btn { font-size: 0.7rem; padding: 4px 10px; }
+        }
+
+        .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 999; opacity: 0; transition: opacity 0.3s ease; }
+        .sidebar-overlay.active { display: block; opacity: 1; }
+
+        /* ===== TOAST MESSAGE ===== */
+        .toast-message {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: var(--green);
+            color: #fff;
+            padding: 16px 24px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-lg);
+            z-index: 9999;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+            pointer-events: none;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .toast-message.show {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+
+        .toast-message.error {
+            background: var(--red);
+        }
+
+        /* ===== ACCESS DENIED ===== */
+        .access-denied {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-secondary);
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+        }
+
+        .access-denied i {
+            font-size: 3rem;
+            color: var(--red);
+            margin-bottom: 16px;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ===== SIDEBAR OVERLAY (mobile) ===== -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- ===== SIDEBAR ===== -->
+    <aside class="sidebar" id="sidebar">
+        <div class="logo">
+            <img src="../assets/logo.png" alt="GeepChris Bridge" onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">
+            <span class="logo-fallback">GeepChris<span>Bridge</span></span>
+        </div>
+
+        <ul class="nav">
+            <li><a href="index.html"><i class="fas fa-chart-pie"></i> Dashboard</a></li>
+            <li><a href="clients.html"><i class="fas fa-users"></i> Clients</a></li>
+            <li><a href="visa-countries.html"><i class="fas fa-globe-africa"></i> Visa Countries</a></li>
+            <li><a href="form-templates.html"><i class="fas fa-file-alt"></i> Form Templates</a></li>
+            <li><a href="applications.html" class="active"><i class="fas fa-list-check"></i> Applications</a></li>
+            <li><a href="settings.html"><i class="fas fa-sliders-h"></i> Settings</a></li>
+            <li><a href="users.html" id="usersNavLink"><i class="fas fa-users-cog"></i> Users</a></li>
+        </ul>
+
+        <div class="user-section">
+            <div class="user-info">
+                <div class="user-avatar" id="userAvatar">G</div>
+                <div>
+                    <div class="user-name" id="userName">Guest</div>
+                    <div class="user-role" id="userRole">Not Logged In</div>
+                </div>
+            </div>
+            <button class="logout-btn" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</button>
+        </div>
+    </aside>
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <main class="main-content">
+
+        <!-- ===== TOP BAR ===== -->
+        <div class="topbar">
+            <div class="page-title">
+                <h1>Applications</h1>
+                <p id="pageSubtitle">Manage all applications submitted through your services.</p>
+            </div>
+            <div class="topbar-actions">
+                <div class="notification-bell">
+                    <i class="fas fa-bell"></i>
+                    <span class="badge" id="notificationCount">0</span>
+                </div>
+                <button class="menu-toggle" id="menuToggle">
+                    <div class="hamburger" id="hamburger">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                </button>
+            </div>
+        </div>
+
+        <!-- ===== APPLICATIONS CONTENT ===== -->
+        <div id="applicationsContent">
+
+            <!-- ===== TABS ===== -->
+            <div class="tabs-container">
+                <div class="tabs-header" id="tabsHeader">
+                    <!-- Tabs will be dynamically rendered -->
+                </div>
+
+                <!-- Tab Panels -->
+                <div id="tabPanels">
+                    <!-- Each tab panel will be dynamically rendered -->
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ===== ACCESS DENIED ===== -->
+        <div id="accessDenied" style="display:none;">
+            <div class="access-denied">
+                <i class="fas fa-lock"></i>
+                <h2>Access Denied</h2>
+                <p>You don't have permission to view applications. Please contact your administrator.</p>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- ===== DETAIL MODAL ===== -->
+    <div class="modal-overlay" id="detailModal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h2 id="modalTitle">Application Details</h2>
+                <button class="close-btn" id="modalCloseBtn">&times;</button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- Dynamic content -->
+            </div>
+            <div class="modal-footer" id="modalFooter">
+                <select class="status-select" id="modalStatusSelect">
+                    <option value="new">New</option>
+                    <option value="processing">Processing</option>
+                    <option value="completed">Completed</option>
+                    <option value="rejected">Rejected</option>
+                    <option value="pending">Pending</option>
+                    <option value="submitted">Submitted</option>
+                </select>
+                <button class="btn-update" id="modalUpdateBtn">Update Status</button>
+                <button class="btn-close" id="modalCloseFooterBtn">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== FILE VIEWER MODAL ===== -->
+    <div class="file-viewer-overlay" id="fileViewerOverlay">
+        <div class="file-viewer-box">
+            <div class="file-viewer-header">
+                <h3 id="fileViewerTitle">File Preview</h3>
+                <div class="file-actions">
+                    <button class="btn-download" id="fileDownloadBtn"><i class="fas fa-download"></i> Download</button>
+                    <button class="btn-close-viewer" id="fileViewerCloseBtn"><i class="fas fa-times"></i> Close</button>
+                </div>
+            </div>
+            <div class="file-viewer-body" id="fileViewerBody">
+                <!-- Dynamic content -->
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== TOAST MESSAGE ===== -->
+    <div class="toast-message" id="toastMessage">
+        <i class="fas fa-check-circle"></i>
+        <span id="toastText">Success!</span>
+    </div>
+
+    <!-- ===== FIREBASE SDK ===== -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+    <script>
+        // ==========================================
+        // FIREBASE CONFIGURATION
+        // ==========================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyDHSOM7-GZXQ7tYySYTRiyCAHZOn9SQhhE",
+            authDomain: "geepchris-bridge.firebaseapp.com",
+            projectId: "geepchris-bridge",
+            storageBucket: "geepchris-bridge.firebasestorage.app",
+            messagingSenderId: "61219875988",
+            appId: "1:61219875988:web:a393bb73ce2b85991b9881"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+
+        // ==========================================
+        // DOM ELEMENTS
+        // ==========================================
+        const sidebar = document.getElementById('sidebar');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+        const menuToggle = document.getElementById('menuToggle');
+        const hamburger = document.getElementById('hamburger');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const userName = document.getElementById('userName');
+        const userRole = document.getElementById('userRole');
+        const userAvatar = document.getElementById('userAvatar');
+        const pageSubtitle = document.getElementById('pageSubtitle');
+        const applicationsContent = document.getElementById('applicationsContent');
+        const accessDenied = document.getElementById('accessDenied');
+        const usersNavLink = document.getElementById('usersNavLink');
+
+        const tabsHeader = document.getElementById('tabsHeader');
+        const tabPanels = document.getElementById('tabPanels');
+        const detailModal = document.getElementById('detailModal');
+        const modalCloseBtn = document.getElementById('modalCloseBtn');
+        const modalCloseFooterBtn = document.getElementById('modalCloseFooterBtn');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalBody = document.getElementById('modalBody');
+        const modalStatusSelect = document.getElementById('modalStatusSelect');
+        const modalUpdateBtn = document.getElementById('modalUpdateBtn');
+        const toastMessage = document.getElementById('toastMessage');
+        const toastText = document.getElementById('toastText');
+
+        const fileViewerOverlay = document.getElementById('fileViewerOverlay');
+        const fileViewerTitle = document.getElementById('fileViewerTitle');
+        const fileViewerBody = document.getElementById('fileViewerBody');
+        const fileDownloadBtn = document.getElementById('fileDownloadBtn');
+        const fileViewerCloseBtn = document.getElementById('fileViewerCloseBtn');
+
+        let currentFileUrl = '';
+        let currentFileName = '';
+        let currentStaff = null;
+        let allApplications = {};
+        let currentTab = 'all';
+        let currentSearch = '';
+        let currentStatusFilter = 'all';
+        let currentDetailApp = null;
+
+        // ==========================================
+        // UPDATE SIDEBAR AVATAR - FIXED
+        // ==========================================
+        function updateSidebarAvatar(photoURL, fullName) {
+            if (photoURL && photoURL.trim() !== '') {
+                // Show uploaded image
+                userAvatar.innerHTML = `<img src="${photoURL}" alt="Profile">`;
+                userAvatar.style.background = 'transparent';
+                userAvatar.style.display = 'flex';
+                userAvatar.style.alignItems = 'center';
+                userAvatar.style.justifyContent = 'center';
+            } else {
+                // Fallback to initials
+                const initial = (fullName || 'A')[0].toUpperCase();
+                userAvatar.innerHTML = initial;
+                userAvatar.style.background = 'var(--green)';
+                userAvatar.style.display = 'flex';
+                userAvatar.style.alignItems = 'center';
+                userAvatar.style.justifyContent = 'center';
+            }
+        }
+
+        // ==========================================
+        // ROLE PERMISSIONS
+        // ==========================================
+        const ROLES = {
+            SUPER_ADMIN: 'super_admin',
+            OPERATIONS_MANAGER: 'operations_manager',
+            PROCESSING_OFFICER: 'processing_officer',
+            CONTENT_MANAGER: 'content_manager'
+        };
+
+        const ROLE_LABELS = {
+            [ROLES.SUPER_ADMIN]: 'Super Admin',
+            [ROLES.OPERATIONS_MANAGER]: 'Operations Manager',
+            [ROLES.PROCESSING_OFFICER]: 'Processing Officer',
+            [ROLES.CONTENT_MANAGER]: 'Content Manager'
+        };
+
+        function isSuperAdmin() { return currentStaff && currentStaff.role === ROLES.SUPER_ADMIN; }
+        function isOperationsManager() { return currentStaff && currentStaff.role === ROLES.OPERATIONS_MANAGER; }
+        function isProcessingOfficer() { return currentStaff && currentStaff.role === ROLES.PROCESSING_OFFICER; }
+        function isContentManager() { return currentStaff && currentStaff.role === ROLES.CONTENT_MANAGER; }
+
+        function getRoleLevel(role) {
+            const levels = {
+                [ROLES.SUPER_ADMIN]: 4,
+                [ROLES.OPERATIONS_MANAGER]: 3,
+                [ROLES.PROCESSING_OFFICER]: 2,
+                [ROLES.CONTENT_MANAGER]: 1
+            };
+            return levels[role] || 0;
+        }
+
+        function canAccess(requiredLevel) {
+            if (!currentStaff) return false;
+            return getRoleLevel(currentStaff.role) >= requiredLevel;
+        }
+
+        // ==========================================
+        // COLLECTION CONFIGURATION
+        // ==========================================
+        const COLLECTIONS = {
+            'visa-applications': {
+                label: 'Visa Applications',
+                icon: 'fa-passport',
+                collection: 'applications'
+            },
+            'business-account': {
+                label: 'Business Account',
+                icon: 'fa-building-columns',
+                collection: 'business-account-applications'
+            },
+            'loan': {
+                label: 'Loan Applications',
+                icon: 'fa-hand-holding-usd',
+                collection: 'loan-applications'
+            },
+            'pos': {
+                label: 'POS Applications',
+                icon: 'fa-credit-card',
+                collection: 'pos-applications'
+            },
+            'business-name': {
+                label: 'Business Name Reg',
+                icon: 'fa-file-signature',
+                collection: 'business-name-applications'
+            },
+            'company-reg': {
+                label: 'Company Registration',
+                icon: 'fa-building',
+                collection: 'company-reg-applications'
+            }
+        };
+
+        // ==========================================
+        // AUTH GUARD - ORIGINAL (NO CHANGES)
+        // ==========================================
+        async function checkAuth() {
+            return new Promise((resolve) => {
+                auth.onAuthStateChanged(async (user) => {
+                    if (!user) {
+                        window.location.href = 'login.html';
+                        resolve(false);
+                        return;
+                    }
+
+                    try {
+                        const staffSnapshot = await db.collection('staff')
+                            .where('uid', '==', user.uid)
+                            .get();
+
+                        if (staffSnapshot.empty) {
+                            await auth.signOut();
+                            window.location.href = 'login.html';
+                            resolve(false);
+                            return;
+                        }
+
+                        const staffDoc = staffSnapshot.docs[0];
+                        const staffData = staffDoc.data();
+
+                        if (!staffData.active) {
+                            await auth.signOut();
+                            alert('Your account has been deactivated. Contact your administrator.');
+                            window.location.href = 'login.html';
+                            resolve(false);
+                            return;
+                        }
+
+                        if (!staffData.activated) {
+                            await auth.signOut();
+                            window.location.href = 'login.html';
+                            resolve(false);
+                            return;
+                        }
+
+                        currentStaff = {
+                            id: staffDoc.id,
+                            ...staffData
+                        };
+
+                        userName.textContent = staffData.fullName || 'Admin User';
+                        userRole.textContent = ROLE_LABELS[staffData.role] || 'Staff';
+                        
+                        // ===== FIX: Update sidebar avatar with profile photo =====
+                        updateSidebarAvatar(staffData.profilePhoto, staffData.fullName);
+                        
+                        pageSubtitle.textContent = `Manage all applications submitted through your services.`;
+
+                        // Show/hide Users nav link
+                        if (isSuperAdmin()) {
+                            usersNavLink.style.display = 'flex';
+                        } else {
+                            usersNavLink.style.display = 'none';
+                        }
+
+                        // Content Manager cannot access applications
+                        if (isContentManager()) {
+                            applicationsContent.style.display = 'none';
+                            accessDenied.style.display = 'block';
+                            resolve(false);
+                            return;
+                        }
+
+                        applicationsContent.style.display = 'block';
+                        accessDenied.style.display = 'none';
+
+                        loadAllApplications();
+                        resolve(true);
+
+                    } catch (error) {
+                        console.error('Auth guard error:', error);
+                        window.location.href = 'login.html';
+                        resolve(false);
+                    }
+                });
+            });
+        }
+
+        // ==========================================
+        // SIDEBAR TOGGLE
+        // ==========================================
+        function toggleSidebar() {
+            sidebar.classList.toggle('open');
+            sidebarOverlay.classList.toggle('active');
+            hamburger.classList.toggle('active');
+            document.body.style.overflow = sidebar.classList.contains('open') ? 'hidden' : '';
+        }
+
+        menuToggle.addEventListener('click', toggleSidebar);
+        sidebarOverlay.addEventListener('click', toggleSidebar);
+
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 992 && sidebar.classList.contains('open')) {
+                toggleSidebar();
+            }
+        });
+
+        // ==========================================
+        // TOAST MESSAGE
+        // ==========================================
+        let toastTimeout;
+
+        function showToast(message, isError = false) {
+            toastText.textContent = message;
+            toastMessage.className = 'toast-message show';
+            if (isError) {
+                toastMessage.classList.add('error');
+                toastMessage.querySelector('i').className = 'fas fa-exclamation-circle';
+            } else {
+                toastMessage.classList.remove('error');
+                toastMessage.querySelector('i').className = 'fas fa-check-circle';
+            }
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toastMessage.classList.remove('show');
+            }, 4000);
+        }
+
+        // ==========================================
+        // FILE VIEWER FUNCTIONS
+        // ==========================================
+        function openFileViewer(url, fileName) {
+            currentFileUrl = url;
+            currentFileName = fileName || 'document';
+
+            fileViewerTitle.textContent = fileName || 'File Preview';
+
+            const fileExt = fileName ? fileName.split('.').pop().toLowerCase() : '';
+            const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp', 'ico'].includes(fileExt);
+            const isPDF = fileExt === 'pdf';
+
+            let html = '';
+
+            if (isImage) {
+                html = `<img src="${url}" alt="${fileName}" onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\\'file-preview-fallback\\'><i class=\\'fas fa-file-image\\'></i><p>Unable to preview this image. Click Download to view.</p></div>'">`;
+            } else if (isPDF) {
+                html = `<iframe src="${url}#toolbar=0" width="100%" height="100%" style="min-height:400px; border:none;" allowfullscreen></iframe>`;
+            } else {
+                html = `
+                    <div class="file-preview-fallback">
+                        <i class="fas fa-file"></i>
+                        <p>${fileName || 'File'}</p>
+                        <p style="font-size:0.85rem; margin-top:8px;">Click Download to view or save this file.</p>
+                        <a href="${url}" target="_blank" rel="noopener noreferrer" style="display:inline-block; margin-top:12px; padding:8px 20px; background:var(--green); color:#fff; border-radius:6px; text-decoration:none; font-weight:600;">
+                            <i class="fas fa-external-link-alt"></i> Open in New Tab
+                        </a>
+                    </div>
+                `;
+            }
+
+            fileViewerBody.innerHTML = html;
+            fileViewerOverlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeFileViewer() {
+            fileViewerOverlay.classList.remove('active');
+            document.body.style.overflow = '';
+            fileViewerBody.innerHTML = '';
+            currentFileUrl = '';
+            currentFileName = '';
+        }
+
+        function downloadCurrentFile() {
+            if (currentFileUrl) {
+                const link = document.createElement('a');
+                link.href = currentFileUrl;
+                link.download = currentFileName || 'document';
+                link.target = '_blank';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+        }
+
+        fileViewerCloseBtn.addEventListener('click', closeFileViewer);
+        fileViewerOverlay.addEventListener('click', function(e) {
+            if (e.target === this) closeFileViewer();
+        });
+        fileDownloadBtn.addEventListener('click', downloadCurrentFile);
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                if (fileViewerOverlay.classList.contains('active')) {
+                    closeFileViewer();
+                }
+            }
+        });
+
+        // ==========================================
+        // LOAD APPLICATIONS
+        // ==========================================
+        async function loadAllApplications() {
+            const promises = [];
+
+            for (const [key, config] of Object.entries(COLLECTIONS)) {
+                const collectionName = config.collection;
+                promises.push(
+                    db.collection(collectionName)
+                    .orderBy('createdAt', 'desc')
+                    .get()
+                    .then(snapshot => {
+                        const apps = [];
+                        snapshot.forEach(doc => {
+                            const data = doc.data();
+                            let applicantName = 'Unknown';
+                            let phoneNumber = '—';
+
+                            if (data.submittedData) {
+                                const sd = data.submittedData;
+                                applicantName = sd.fullName || sd.name || sd.applicantName || sd.firstName || 'Unknown';
+                                if (sd.lastName && applicantName !== 'Unknown') {
+                                    applicantName = applicantName + ' ' + sd.lastName;
+                                }
+                                phoneNumber = sd.phone || sd.phoneNumber || sd.mobile || sd.telephone || '—';
+                            }
+                            if (data.applicantName) applicantName = data.applicantName;
+                            if (data.fullName) applicantName = data.fullName;
+                            if (data.phone) phoneNumber = data.phone;
+
+                            let serviceName = data.service || data.serviceName || config.label;
+                            let country = data.country || data.submittedData?.country || '—';
+
+                            apps.push({
+                                id: doc.id,
+                                collection: collectionName,
+                                collectionKey: key,
+                                serviceName: serviceName,
+                                applicantName: applicantName,
+                                phoneNumber: phoneNumber,
+                                country: country,
+                                status: data.status || 'new',
+                                createdAt: data.createdAt,
+                                data: data,
+                                submittedData: data.submittedData || {}
+                            });
+                        });
+                        return apps;
+                    })
+                    .catch(err => {
+                        console.warn(`Error loading ${collectionName}:`, err);
+                        return [];
+                    })
+                );
+            }
+
+            try {
+                const results = await Promise.all(promises);
+                const allApps = results.flat();
+
+                const grouped = {};
+                for (const app of allApps) {
+                    const key = app.collectionKey;
+                    if (!grouped[key]) grouped[key] = [];
+                    grouped[key].push(app);
+                }
+
+                grouped['all'] = allApps;
+                allApplications = grouped;
+
+                const totalApps = allApps.length;
+                document.getElementById('notificationCount').textContent = totalApps;
+
+                renderTabs();
+                renderTabContent(currentTab);
+            } catch (error) {
+                console.error('Error loading applications:', error);
+                showToast('Error loading applications. Please refresh.', true);
+            }
+        }
+
+        // ==========================================
+        // RENDER TABS
+        // ==========================================
+        function renderTabs() {
+            let html = '';
+            const tabConfigs = {
+                'all': { label: 'All', icon: 'fa-layer-group' }
+            };
+
+            for (const [key, config] of Object.entries(COLLECTIONS)) {
+                tabConfigs[key] = {
+                    label: config.label,
+                    icon: config.icon
+                };
+            }
+
+            for (const [key, config] of Object.entries(tabConfigs)) {
+                const count = (allApplications[key] || []).length;
+                const isActive = key === currentTab;
+                html += `
+                    <button class="tab-btn ${isActive ? 'active' : ''}" data-tab="${key}">
+                        <i class="fas ${config.icon}"></i> ${config.label}
+                        <span class="count">${count}</span>
+                    </button>
+                `;
+            }
+
+            tabsHeader.innerHTML = html;
+
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const tab = this.dataset.tab;
+                    switchTab(tab);
+                });
+            });
+        }
+
+        // ==========================================
+        // SWITCH TAB
+        // ==========================================
+        function switchTab(tab) {
+            currentTab = tab;
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.tab === tab);
+            });
+            renderTabContent(tab);
+        }
+
+        // ==========================================
+        // RENDER TAB CONTENT
+        // ==========================================
+        function renderTabContent(tab) {
+            const apps = allApplications[tab] || [];
+
+            let filterHtml = `
+                <div class="table-toolbar">
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="searchInput" placeholder="Search by name, service, phone..." value="${currentSearch}">
+                    </div>
+                    <div class="status-filter">
+                        <label for="statusFilter">Status:</label>
+                        <select id="statusFilter">
+                            <option value="all" ${currentStatusFilter === 'all' ? 'selected' : ''}>All</option>
+                            <option value="new" ${currentStatusFilter === 'new' ? 'selected' : ''}>New</option>
+                            <option value="submitted" ${currentStatusFilter === 'submitted' ? 'selected' : ''}>Submitted</option>
+                            <option value="processing" ${currentStatusFilter === 'processing' ? 'selected' : ''}>Processing</option>
+                            <option value="pending" ${currentStatusFilter === 'pending' ? 'selected' : ''}>Pending</option>
+                            <option value="completed" ${currentStatusFilter === 'completed' ? 'selected' : ''}>Completed</option>
+                            <option value="rejected" ${currentStatusFilter === 'rejected' ? 'selected' : ''}>Rejected</option>
+                        </select>
+                    </div>
+                </div>
+            `;
+
+            let filteredApps = apps;
+            if (currentSearch) {
+                const search = currentSearch.toLowerCase();
+                filteredApps = filteredApps.filter(app =>
+                    (app.applicantName && app.applicantName.toLowerCase().includes(search)) ||
+                    (app.serviceName && app.serviceName.toLowerCase().includes(search)) ||
+                    (app.phoneNumber && app.phoneNumber.toLowerCase().includes(search))
+                );
+            }
+            if (currentStatusFilter !== 'all') {
+                filteredApps = filteredApps.filter(app => app.status === currentStatusFilter);
+            }
+
+            // Check if user can delete applications (only Super Admin)
+            const canDelete = isSuperAdmin();
+
+            let tableHtml = `
+                <div class="table-container">
+                    ${filterHtml}
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Applicant</th>
+                                    <th>Service</th>
+                                    <th>Phone Number</th>
+                                    <th>Status</th>
+                                    <th>Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabTableBody">
+                    `;
+
+            if (filteredApps.length === 0) {
+                tableHtml += `
+                    <tr>
+                        <td colspan="6">
+                            <div class="empty-state">
+                                <i class="fas fa-inbox"></i>
+                                <p>No applications found for this category.</p>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            } else {
+                for (const app of filteredApps) {
+                    const statusClass = app.status || 'new';
+                    const statusLabel = statusClass.charAt(0).toUpperCase() + statusClass.slice(1);
+                    const date = app.createdAt ? new Date(app.createdAt.seconds * 1000).toLocaleDateString() : '—';
+                    const phoneDisplay = app.phoneNumber || '—';
+
+                    tableHtml += `
+                        <tr>
+                            <td><strong>${app.applicantName}</strong></td>
+                            <td>${app.serviceName}</td>
+                            <td>${phoneDisplay}</td>
+                            <td><span class="status-badge ${statusClass}">${statusLabel}</span></td>
+                            <td>${date}</td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="btn-sm view" data-id="${app.id}" data-collection="${app.collection}">
+                                        <i class="fas fa-eye"></i> View
+                                    </button>
+                                    <button class="btn-sm update" data-id="${app.id}" data-collection="${app.collection}">
+                                        <i class="fas fa-pen"></i> Update
+                                    </button>
+                                    ${canDelete ? `
+                                        <button class="btn-sm delete" data-id="${app.id}" data-collection="${app.collection}">
+                                            <i class="fas fa-trash"></i> Delete
+                                        </button>
+                                    ` : ''}
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                }
+            }
+
+            tableHtml += `
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+
+            const panel = document.getElementById('tabPanel');
+            if (panel) {
+                panel.innerHTML = tableHtml;
+                attachTableEvents();
+            } else {
+                const newPanel = document.createElement('div');
+                newPanel.id = 'tabPanel';
+                newPanel.className = 'tab-panel active';
+                newPanel.innerHTML = tableHtml;
+                tabPanels.innerHTML = '';
+                tabPanels.appendChild(newPanel);
+                attachTableEvents();
+            }
+
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) {
+                searchInput.addEventListener('input', function() {
+                    currentSearch = this.value;
+                    renderTabContent(currentTab);
+                });
+            }
+
+            const statusFilter = document.getElementById('statusFilter');
+            if (statusFilter) {
+                statusFilter.addEventListener('change', function() {
+                    currentStatusFilter = this.value;
+                    renderTabContent(currentTab);
+                });
+            }
+        }
+
+        // ==========================================
+        // ATTACH TABLE EVENTS
+        // ==========================================
+        function attachTableEvents() {
+            document.querySelectorAll('.btn-sm.view').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const id = this.dataset.id;
+                    const collection = this.dataset.collection;
+                    openApplicationDetail(id, collection);
+                });
+            });
+
+            document.querySelectorAll('.btn-sm.update').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const id = this.dataset.id;
+                    const collection = this.dataset.collection;
+                    openApplicationDetail(id, collection);
+                });
+            });
+
+            document.querySelectorAll('.btn-sm.delete').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const id = this.dataset.id;
+                    const collection = this.dataset.collection;
+                    if (confirm('Are you sure you want to delete this application?')) {
+                        deleteApplication(id, collection);
+                    }
+                });
+            });
+        }
+
+        // ==========================================
+        // OPEN APPLICATION DETAIL
+        // ==========================================
+        async function openApplicationDetail(id, collection) {
+            try {
+                const doc = await db.collection(collection).doc(id).get();
+                if (!doc.exists) {
+                    showToast('Application not found.', true);
+                    return;
+                }
+
+                const data = doc.data();
+                const appData = {
+                    id: id,
+                    collection: collection,
+                    ...data
+                };
+
+                currentDetailApp = appData;
+                renderDetailModal(appData);
+                modalStatusSelect.value = appData.status || 'new';
+                detailModal.classList.add('active');
+                document.body.style.overflow = 'hidden';
+
+            } catch (error) {
+                console.error('Error loading application detail:', error);
+                showToast('Error loading application details.', true);
+            }
+        }
+
+        // ==========================================
+        // OPEN FILE IN VIEWER
+        // ==========================================
+        function openFileInViewer(url, fileName) {
+            if (!url) {
+                showToast('No file URL provided.', true);
+                return;
+            }
+            if (detailModal.classList.contains('active')) {
+                closeModal();
+            }
+            openFileViewer(url, fileName);
+        }
+
+        // ==========================================
+        // RENDER DETAIL MODAL
+        // ==========================================
+        function renderDetailModal(app) {
+            const statusLabel = (app.status || 'New').charAt(0).toUpperCase() + (app.status || 'new').slice(1);
+            const date = app.createdAt ? new Date(app.createdAt.seconds * 1000).toLocaleString() : '—';
+
+            modalTitle.textContent = `Application #${app.id.slice(0, 8)}`;
+
+            const sd = app.submittedData || {};
+
+            let html = `
+                <div class="detail-grid">
+                    <div class="detail-item">
+                        <div class="label">Status</div>
+                        <div class="value"><span class="status-badge ${app.status || 'new'}">${statusLabel}</span></div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="label">Submitted</div>
+                        <div class="value">${date}</div>
+                    </div>
+            `;
+
+            const fieldMap = {
+                fullName: 'Full Name',
+                name: 'Full Name',
+                firstName: 'First Name',
+                lastName: 'Last Name',
+                email: 'Email',
+                phone: 'Phone Number',
+                phoneNumber: 'Phone Number',
+                mobile: 'Phone Number',
+                telephone: 'Phone Number',
+                country: 'Country',
+                visaType: 'Visa Type',
+                duration: 'Duration',
+                price: 'Price',
+                description: 'Description',
+                service: 'Service Type',
+                companyName: 'Company Name',
+                businessName: 'Business Name',
+                natureOfBusiness: 'Nature of Business',
+                tin: 'Tax Identification Number',
+                bvn: 'BVN',
+                nin: 'NIN',
+                passportNumber: 'Passport Number',
+                dateOfBirth: 'Date of Birth',
+                gender: 'Gender',
+                address: 'Address',
+                city: 'City',
+                state: 'State',
+                lga: 'Local Government Area',
+                accountType: 'Account Type',
+                loanAmount: 'Loan Amount',
+                repaymentPlan: 'Repayment Plan',
+                posType: 'POS Type',
+                businessType: 'Business Type'
+            };
+
+            const allKeys = Object.keys(sd);
+
+            const relevantKeys = allKeys.filter(key =>
+                key in fieldMap &&
+                sd[key] !== undefined && sd[key] !== null && sd[key] !== '' &&
+                !(typeof sd[key] === 'string' && (sd[key].startsWith('http') || sd[key].startsWith('/')))
+            );
+
+            for (const key of relevantKeys) {
+                const label = fieldMap[key] || key;
+                let value = sd[key];
+                if (value && value.seconds) {
+                    value = new Date(value.seconds * 1000).toLocaleString();
+                }
+                html += `
+                    <div class="detail-item">
+                        <div class="label">${label}</div>
+                        <div class="value">${value}</div>
+                    </div>
+                `;
+            }
+
+            const fileKeys = allKeys.filter(key =>
+                sd[key] !== undefined && sd[key] !== null && sd[key] !== '' &&
+                typeof sd[key] === 'string' && (sd[key].startsWith('http') || sd[key].startsWith('/'))
+            );
+
+            for (const key of fileKeys) {
+                const label = fieldMap[key] || key;
+                const url = sd[key];
+                const fileName = url.split('/').pop() || 'file';
+                html += `
+                    <div class="detail-item">
+                        <div class="label">${label}</div>
+                        <div class="value">
+                            <a href="#" class="file-link" onclick="event.preventDefault(); openFileInViewer('${url}', '${fileName}');">
+                                <i class="fas fa-file"></i> ${fileName}
+                            </a>
+                        </div>
+                    </div>
+                `;
+            }
+
+            if (app.documents && app.documents.length > 0) {
+                html += `
+                    <div class="detail-item full-width">
+                        <div class="label">Uploaded Documents</div>
+                        <div class="value">
+                            <div class="document-list">
+                `;
+                for (const doc of app.documents) {
+                    const fileName = doc.split('/').pop() || 'document';
+                    html += `
+                        <span class="doc-tag">
+                            <i class="fas fa-file"></i>
+                            <a href="#" class="file-link" onclick="event.preventDefault(); openFileInViewer('${doc}', '${fileName}');">
+                                ${fileName}
+                            </a>
+                        </span>
+                    `;
+                }
+                html += `
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            if (sd.termsAccepted !== undefined) {
+                html += `
+                    <div class="detail-item">
+                        <div class="label">Terms Accepted</div>
+                        <div class="value">${sd.termsAccepted ? '✅ Yes' : '❌ No'}</div>
+                    </div>
+                `;
+                if (sd.termsAcceptedAt) {
+                    const dateVal = typeof sd.termsAcceptedAt === 'string' ? new Date(sd.termsAcceptedAt).toLocaleString() :
+                        '—';
+                    html += `
+                        <div class="detail-item">
+                            <div class="label">Terms Accepted At</div>
+                            <div class="value">${dateVal}</div>
+                        </div>
+                    `;
+                }
+            }
+
+            html += `
+                </div>
+            `;
+
+            modalBody.innerHTML = html;
+        }
+
+        // ==========================================
+        // UPDATE APPLICATION STATUS
+        // ==========================================
+        async function updateApplicationStatus() {
+            if (!currentDetailApp) return;
+
+            const newStatus = modalStatusSelect.value;
+            const id = currentDetailApp.id;
+            const collection = currentDetailApp.collection;
+
+            modalUpdateBtn.disabled = true;
+            modalUpdateBtn.textContent = 'Updating...';
+
+            try {
+                await db.collection(collection).doc(id).update({
+                    status: newStatus,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                showToast(`Application status updated to ${newStatus}!`);
+                closeModal();
+                await loadAllApplications();
+
+            } catch (error) {
+                console.error('Error updating status:', error);
+                showToast('Error updating status. Please try again.', true);
+            } finally {
+                modalUpdateBtn.disabled = false;
+                modalUpdateBtn.textContent = 'Update Status';
+            }
+        }
+
+        // ==========================================
+        // DELETE APPLICATION
+        // ==========================================
+        async function deleteApplication(id, collection) {
+            try {
+                await db.collection(collection).doc(id).delete();
+                showToast('Application deleted successfully.');
+                await loadAllApplications();
+            } catch (error) {
+                console.error('Error deleting application:', error);
+                showToast('Error deleting application. Please try again.', true);
+            }
+        }
+
+        // ==========================================
+        // MODAL CONTROLS
+        // ==========================================
+        function closeModal() {
+            detailModal.classList.remove('active');
+            document.body.style.overflow = '';
+            currentDetailApp = null;
+        }
+
+        modalCloseBtn.addEventListener('click', closeModal);
+        modalCloseFooterBtn.addEventListener('click', closeModal);
+        detailModal.addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+
+        modalUpdateBtn.addEventListener('click', updateApplicationStatus);
+
+        // ==========================================
+        // LOGOUT
+        // ==========================================
+        logoutBtn.addEventListener('click', () => {
+            auth.signOut().then(() => {
+                window.location.href = 'login.html';
+            }).catch((error) => {
+                console.error('Logout error:', error);
+            });
+        });
+
+        // ==========================================
+        // INIT
+        // ==========================================
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuth();
+        });
+    </script>
+
+</body>
+</html>

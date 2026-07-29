@@ -1,0 +1,1302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clients — GeepChris Bridge Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- ===== FIREBASE SDK ===== -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+    <style>
+        /* ===== RESET & BASE ===== */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg-body: #f8fafc;
+            --bg-card: #ffffff;
+            --bg-sidebar: #020617;
+            --text-primary: #0f172a;
+            --text-secondary: #64748b;
+            --text-sidebar: #ffffff;
+            --border: #e2e8f0;
+            --green: #16a34a;
+            --green-light: #22c55e;
+            --red: #dc2626;
+            --orange: #f97316;
+            --blue: #3b82f6;
+            --purple: #a855f7;
+            --shadow: 0 1px 3px rgba(0,0,0,0.06);
+            --shadow-lg: 0 4px 12px rgba(0,0,0,0.08);
+            --radius: 12px;
+            --sidebar-width: 260px;
+        }
+
+        html, body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-body);
+            color: var(--text-primary);
+            height: 100%;
+            overflow-x: hidden;
+        }
+
+        body { display: flex; min-height: 100vh; }
+
+        /* ===== LOADING OVERLAY ===== */
+        #authLoadingOverlay {
+            position: fixed;
+            inset: 0;
+            background: #020617;
+            z-index: 99999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 20px;
+            font-family: 'Inter', sans-serif;
+            transition: opacity 0.4s ease;
+        }
+
+        #authLoadingOverlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        #authLoadingOverlay .spinner {
+            width: 48px;
+            height: 48px;
+            border: 3px solid rgba(255,255,255,0.08);
+            border-top-color: #22c55e;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        #authLoadingOverlay .loading-text {
+            color: rgba(255,255,255,0.4);
+            font-size: 0.85rem;
+            font-weight: 500;
+            letter-spacing: 0.05em;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* ===== SIDEBAR ===== */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: var(--bg-sidebar);
+            color: var(--text-sidebar);
+            min-height: 100vh;
+            padding: 24px 16px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow-y: auto;
+        }
+        .sidebar .logo { display: flex; align-items: center; gap: 12px; margin-bottom: 32px; padding-bottom: 16px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+        .sidebar .logo img { height: 40px; width: auto; }
+        .sidebar .logo .logo-fallback { font-size: 1.1rem; font-weight: 800; color: #fff; }
+        .sidebar .logo .logo-fallback span { color: var(--green-light); }
+        .sidebar .nav { list-style: none; flex: 1; }
+        .sidebar .nav li { margin-bottom: 2px; }
+        .sidebar .nav a { display: flex; align-items: center; gap: 14px; padding: 12px 14px; border-radius: var(--radius); color: rgba(255,255,255,0.6); text-decoration: none; font-weight: 500; font-size: 0.9rem; transition: all 0.2s ease; }
+        .sidebar .nav a:hover { background: rgba(255,255,255,0.08); color: #fff; }
+        .sidebar .nav a.active { background: rgba(34,197,94,0.15); color: var(--green-light); }
+        .sidebar .nav a i { width: 20px; text-align: center; font-size: 1.1rem; }
+        .sidebar .user-section { padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.08); margin-top: auto; }
+        .sidebar .user-section .user-info { display: flex; align-items: center; gap: 12px; padding: 10px 14px; }
+        .sidebar .user-section .user-avatar { 
+            width: 38px; 
+            height: 38px; 
+            border-radius: 50%; 
+            background: var(--green); 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-weight: 700; 
+            font-size: 0.9rem; 
+            color: #fff; 
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+        .sidebar .user-section .user-avatar img { 
+            width: 100%; 
+            height: 100%; 
+            border-radius: 50%; 
+            object-fit: cover; 
+        }
+        .sidebar .user-section .user-name { font-size: 0.85rem; font-weight: 600; color: #fff; }
+        .sidebar .user-section .user-role { font-size: 0.75rem; color: rgba(255,255,255,0.5); }
+        .sidebar .user-section .logout-btn { display: flex; width: 100%; padding: 10px 14px; border: none; border-radius: var(--radius); background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.6); font-weight: 500; font-size: 0.85rem; cursor: pointer; transition: 0.2s; text-align: left; margin-top: 8px; align-items: center; gap: 10px; font-family: 'Inter', sans-serif; }
+        .sidebar .user-section .logout-btn:hover { background: rgba(220,38,38,0.2); color: var(--red); }
+
+        /* ===== MAIN CONTENT ===== */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            flex: 1;
+            padding: 24px 32px;
+            min-height: 100vh;
+            width: calc(100% - var(--sidebar-width));
+            display: none;
+        }
+
+        .main-content.visible {
+            display: block;
+        }
+
+        /* ===== TOP BAR ===== */
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+            background: var(--bg-card);
+            padding: 16px 24px;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+        }
+        .topbar .page-title h1 { font-size: 1.5rem; font-weight: 700; color: var(--text-primary); }
+        .topbar .page-title p { font-size: 0.85rem; color: var(--text-secondary); margin-top: 2px; }
+        .topbar .topbar-actions { display: flex; align-items: center; gap: 16px; }
+        .topbar .topbar-actions .notification-bell { position: relative; font-size: 1.2rem; cursor: pointer; color: var(--text-secondary); transition: 0.2s; }
+        .topbar .topbar-actions .notification-bell:hover { color: var(--text-primary); }
+        .topbar .topbar-actions .notification-bell .badge { position: absolute; top: -4px; right: -4px; width: 18px; height: 18px; background: var(--green); border-radius: 50%; font-size: 0.6rem; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; }
+        .topbar .topbar-actions .menu-toggle { display: none; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-primary); padding: 4px; transition: 0.3s; }
+        .topbar .topbar-actions .menu-toggle:hover { color: var(--green); }
+
+        /* ===== HAMBURGER ANIMATION ===== */
+        .hamburger { width: 28px; height: 20px; position: relative; cursor: pointer; display: flex; flex-direction: column; justify-content: space-between; }
+        .hamburger span { display: block; width: 100%; height: 2.5px; background: var(--text-primary); border-radius: 4px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); transform-origin: center; }
+        .hamburger.active span:nth-child(1) { transform: translateY(8.75px) rotate(45deg); }
+        .hamburger.active span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+        .hamburger.active span:nth-child(3) { transform: translateY(-8.75px) rotate(-45deg); }
+
+        /* ===== ACCESS DENIED ===== */
+        .access-denied {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-secondary);
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+        }
+        .access-denied i {
+            font-size: 3rem;
+            color: var(--red);
+            margin-bottom: 16px;
+            display: block;
+        }
+
+        /* ===== STATS CARDS ===== */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px 24px;
+            box-shadow: var(--shadow);
+            transition: 0.3s;
+        }
+
+        .stat-card:hover {
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-2px);
+        }
+
+        .stat-card .stat-number {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--text-primary);
+        }
+
+        .stat-card .stat-label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+
+        .stat-card .stat-icon {
+            float: right;
+            font-size: 1.8rem;
+            opacity: 0.3;
+            color: var(--text-secondary);
+        }
+
+        .stat-card .stat-change {
+            display: inline-block;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 2px 10px;
+            border-radius: 999px;
+            margin-top: 6px;
+        }
+
+        .stat-card .stat-change.positive {
+            background: rgba(22,163,74,0.1);
+            color: var(--green);
+        }
+
+        .stat-card .stat-change.negative {
+            background: rgba(220,38,38,0.1);
+            color: var(--red);
+        }
+
+        .stat-card .stat-change.neutral {
+            background: rgba(100,116,139,0.1);
+            color: var(--text-secondary);
+        }
+
+        /* ===== CLIENTS TABLE ===== */
+        .clients-container {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .table-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .table-toolbar .search-box {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--bg-body);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 4px 12px;
+            flex: 1 1 280px;
+        }
+
+        .table-toolbar .search-box i { color: var(--text-secondary); font-size: 0.9rem; }
+        .table-toolbar .search-box input { border: none; background: transparent; padding: 8px 0; font-size: 0.9rem; width: 100%; outline: none; font-family: 'Inter', sans-serif; }
+
+        .table-toolbar .status-filter {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .table-toolbar .status-filter label { font-size: 0.85rem; font-weight: 500; color: var(--text-secondary); }
+        .table-toolbar .status-filter select { padding: 8px 32px 8px 14px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg-body); font-family: 'Inter', sans-serif; font-size: 0.85rem; color: var(--text-primary); appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; cursor: pointer; }
+        .table-toolbar .status-filter select:focus { outline: none; border-color: var(--green); }
+
+        .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .clients-container table { width: 100%; border-collapse: collapse; min-width: 750px; }
+        .clients-container table thead { background: var(--bg-body); }
+        .clients-container table thead th { padding: 10px 14px; text-align: left; font-size: 0.7rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; }
+        .clients-container table tbody td { padding: 12px 14px; font-size: 0.85rem; border-bottom: 1px solid var(--border); }
+        .clients-container table tbody tr:last-child td { border-bottom: none; }
+        .clients-container table tbody tr:hover { background: var(--bg-body); }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 999px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+        .status-badge.active { background: rgba(22,163,74,0.1); color: var(--green); }
+        .status-badge.inactive { background: rgba(220,38,38,0.1); color: var(--red); }
+        .status-badge.pending { background: rgba(249,115,22,0.1); color: var(--orange); }
+
+        .action-buttons { display: flex; gap: 6px; flex-wrap: wrap; }
+        .action-buttons .btn-sm { padding: 4px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.7rem; font-weight: 600; cursor: pointer; transition: 0.2s; background: transparent; font-family: 'Inter', sans-serif; }
+        .action-buttons .btn-sm.view { color: var(--blue); border-color: var(--blue); }
+        .action-buttons .btn-sm.view:hover { background: var(--blue); color: #fff; }
+        .action-buttons .btn-sm.toggle { color: var(--orange); border-color: var(--orange); }
+        .action-buttons .btn-sm.toggle:hover { background: var(--orange); color: #fff; }
+        .action-buttons .btn-sm.delete { color: var(--red); border-color: var(--red); }
+        .action-buttons .btn-sm.delete:hover { background: var(--red); color: #fff; }
+
+        .client-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--bg-body);
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+        .client-avatar img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+
+        .empty-state { text-align: center; padding: 40px 20px; color: var(--text-secondary); }
+        .empty-state i { font-size: 2.5rem; color: var(--border); margin-bottom: 12px; display: block; }
+
+        .loading { display: flex; align-items: center; justify-content: center; padding: 40px 20px; color: var(--text-secondary); gap: 12px; }
+        .loading i { animation: spin 1s linear infinite; }
+
+        /* ===== DETAIL MODAL ===== */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .modal-overlay.active { display: flex; }
+
+        .modal-box {
+            background: var(--bg-card);
+            border-radius: 16px;
+            max-width: 700px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            animation: modalFade 0.25s ease;
+        }
+
+        @keyframes modalFade {
+            from { opacity: 0; transform: scale(0.96) translateY(12px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            background: var(--bg-card);
+            z-index: 1;
+        }
+
+        .modal-header h2 { font-size: 1.2rem; font-weight: 700; }
+        .modal-header .close-btn { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-secondary); transition: 0.2s; padding: 4px; }
+        .modal-header .close-btn:hover { color: var(--red); }
+
+        .modal-body { padding: 24px; }
+
+        .modal-body .detail-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .modal-body .detail-item { margin-bottom: 8px; }
+        .modal-body .detail-item .label { font-size: 0.7rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; }
+        .modal-body .detail-item .value { font-size: 0.95rem; font-weight: 500; color: var(--text-primary); margin-top: 2px; }
+        .modal-body .detail-item .value .status-badge { font-size: 0.75rem; }
+
+        .modal-body .detail-item.full-width { grid-column: 1 / -1; }
+
+        /* ===== APPLICATION HISTORY ===== */
+        .app-history { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border); }
+        .app-history h3 { font-size: 1rem; font-weight: 600; margin-bottom: 12px; }
+        .app-history .app-list { list-style: none; }
+        .app-history .app-list li {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin-bottom: 6px;
+            transition: 0.2s;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .app-history .app-list li:hover { background: var(--bg-body); }
+        .app-history .app-list li .app-info { display: flex; flex-direction: column; }
+        .app-history .app-list li .app-info .app-service { font-weight: 500; font-size: 0.9rem; }
+        .app-history .app-list li .app-info .app-date { font-size: 0.75rem; color: var(--text-secondary); }
+        .app-history .app-list li .app-status .status-badge { font-size: 0.7rem; }
+        .app-history .app-list li .app-action .btn-sm.view { font-size: 0.7rem; padding: 2px 10px; }
+
+        .app-history .empty-state { padding: 20px; font-size: 0.9rem; }
+
+        /* ===== TOAST ===== */
+        .toast-message {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: var(--green);
+            color: #fff;
+            padding: 16px 24px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-lg);
+            z-index: 9999;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+            pointer-events: none;
+            font-family: 'Inter', sans-serif;
+        }
+        .toast-message.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
+        .toast-message.error { background: var(--red); }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 1200px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        @media (max-width: 992px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.open { transform: translateX(0); }
+            .main-content { margin-left: 0; width: 100%; padding: 16px 20px; }
+            .topbar .topbar-actions .menu-toggle { display: block; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
+        }
+
+        @media (max-width: 768px) {
+            .topbar { flex-direction: column; align-items: flex-start; gap: 12px; padding: 16px; }
+            .topbar .topbar-actions { width: 100%; justify-content: space-between; }
+            .stats-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
+            .stat-card { padding: 16px; }
+            .stat-card .stat-number { font-size: 1.4rem; }
+            .clients-container { padding: 16px; }
+            .table-toolbar { flex-direction: column; align-items: stretch; }
+            .modal-body .detail-grid { grid-template-columns: 1fr; }
+            .modal-box { max-width: 100%; margin: 10px; }
+            .app-history .app-list li { flex-direction: column; align-items: stretch; text-align: center; }
+        }
+
+        @media (max-width: 480px) {
+            .main-content { padding: 12px 16px; }
+            .topbar .page-title h1 { font-size: 1.2rem; }
+            .stats-grid { grid-template-columns: 1fr; }
+        }
+
+        .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 999; opacity: 0; transition: opacity 0.3s ease; }
+        .sidebar-overlay.active { display: block; opacity: 1; }
+    </style>
+</head>
+<body>
+
+    <!-- ===== LOADING OVERLAY ===== -->
+    <div id="authLoadingOverlay">
+        <div class="spinner"></div>
+        <div class="loading-text">Authenticating...</div>
+    </div>
+
+    <!-- ===== SIDEBAR OVERLAY (mobile) ===== -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- ===== SIDEBAR ===== -->
+    <aside class="sidebar" id="sidebar">
+        <div class="logo">
+            <img src="../assets/logo.png" alt="GeepChris Bridge" onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">
+            <span class="logo-fallback">GeepChris<span>Bridge</span></span>
+        </div>
+
+        <ul class="nav">
+            <li><a href="index.html"><i class="fas fa-chart-pie"></i> Dashboard</a></li>
+            <li><a href="clients.html" class="active"><i class="fas fa-users"></i> Clients</a></li>
+            <li><a href="visa-countries.html"><i class="fas fa-globe-africa"></i> Visa Countries</a></li>
+            <li><a href="form-templates.html"><i class="fas fa-file-alt"></i> Form Templates</a></li>
+            <li><a href="applications.html"><i class="fas fa-list-check"></i> Applications</a></li>
+            <li><a href="settings.html"><i class="fas fa-sliders-h"></i> Settings</a></li>
+            <li><a href="users.html" id="usersNavLink"><i class="fas fa-users-cog"></i> Users</a></li>
+        </ul>
+
+        <div class="user-section">
+            <div class="user-info">
+                <div class="user-avatar" id="userAvatar">G</div>
+                <div>
+                    <div class="user-name" id="userName">Guest</div>
+                    <div class="user-role" id="userRole">Not Logged In</div>
+                </div>
+            </div>
+            <button class="logout-btn" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</button>
+        </div>
+    </aside>
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <main class="main-content" id="mainContent">
+
+        <!-- ===== TOP BAR ===== -->
+        <div class="topbar">
+            <div class="page-title">
+                <h1>Clients</h1>
+                <p>Manage all registered website users.</p>
+            </div>
+            <div class="topbar-actions">
+                <div class="notification-bell">
+                    <i class="fas fa-bell"></i>
+                    <span class="badge" id="notificationCount">0</span>
+                </div>
+                <button class="menu-toggle" id="menuToggle">
+                    <div class="hamburger" id="hamburger">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                </button>
+            </div>
+        </div>
+
+        <!-- ===== STATS CARDS ===== -->
+        <div class="stats-grid" id="statsGrid">
+            <div class="stat-card">
+                <div class="stat-number" id="totalClients">0</div>
+                <div class="stat-label">Total Clients</div>
+                <i class="fas fa-users stat-icon"></i>
+                <div class="stat-change neutral">All registered users</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="activeClients">0</div>
+                <div class="stat-label">Active Clients</div>
+                <i class="fas fa-user-check stat-icon"></i>
+                <div class="stat-change positive">Can access the platform</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="inactiveClients">0</div>
+                <div class="stat-label">Inactive Clients</div>
+                <i class="fas fa-user-slash stat-icon"></i>
+                <div class="stat-change negative">Account disabled</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="newClients">0</div>
+                <div class="stat-label">New This Month</div>
+                <i class="fas fa-user-plus stat-icon"></i>
+                <div class="stat-change positive">Joined this month</div>
+            </div>
+        </div>
+
+        <!-- ===== CLIENTS TABLE ===== -->
+        <div class="clients-container">
+            <div class="table-toolbar">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="searchInput" placeholder="Search by name, email, phone...">
+                </div>
+                <div class="status-filter">
+                    <label for="statusFilter">Status:</label>
+                    <select id="statusFilter">
+                        <option value="all">All</option>
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                    </select>
+                </div>
+            </div>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Client</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Status</th>
+                            <th>Joined</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="clientsTableBody">
+                        <tr>
+                            <td colspan="6">
+                                <div class="loading">
+                                    <i class="fas fa-spinner"></i> Loading clients...
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- ===== DETAIL MODAL ===== -->
+    <div class="modal-overlay" id="detailModal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h2 id="modalTitle">Client Details</h2>
+                <button class="close-btn" id="modalCloseBtn">&times;</button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- Dynamic content -->
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== TOAST ===== -->
+    <div class="toast-message" id="toastMessage">
+        <i class="fas fa-check-circle"></i>
+        <span id="toastText">Success!</span>
+    </div>
+
+    <!-- ===== FIREBASE SDK ===== -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+    <script>
+        // ==========================================
+        // FIREBASE CONFIGURATION
+        // ==========================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyDHSOM7-GZXQ7tYySYTRiyCAHZOn9SQhhE",
+            authDomain: "geepchris-bridge.firebaseapp.com",
+            projectId: "geepchris-bridge",
+            storageBucket: "geepchris-bridge.firebasestorage.app",
+            messagingSenderId: "61219875988",
+            appId: "1:61219875988:web:a393bb73ce2b85991b9881"
+        };
+
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+
+        // ==========================================
+        // DOM ELEMENTS
+        // ==========================================
+        const sidebar = document.getElementById('sidebar');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+        const menuToggle = document.getElementById('menuToggle');
+        const hamburger = document.getElementById('hamburger');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const userName = document.getElementById('userName');
+        const userRole = document.getElementById('userRole');
+        const userAvatar = document.getElementById('userAvatar');
+
+        const searchInput = document.getElementById('searchInput');
+        const statusFilter = document.getElementById('statusFilter');
+        const clientsTableBody = document.getElementById('clientsTableBody');
+
+        const detailModal = document.getElementById('detailModal');
+        const modalCloseBtn = document.getElementById('modalCloseBtn');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalBody = document.getElementById('modalBody');
+
+        const toastMessage = document.getElementById('toastMessage');
+        const toastText = document.getElementById('toastText');
+
+        let currentStaff = null;
+        let allClients = [];
+        let allApplications = [];
+        let currentSearch = '';
+        let currentStatusFilter = 'all';
+
+        // ==========================================
+        // APPLICATION COLLECTIONS
+        // ==========================================
+        const APP_COLLECTIONS = [
+            'applications',
+            'business-account-applications',
+            'loan-applications',
+            'pos-applications',
+            'business-name-applications',
+            'company-reg-applications'
+        ];
+
+        const APP_LABELS = {
+            'applications': 'Visa Application',
+            'business-account-applications': 'Business Account',
+            'loan-applications': 'Loan Application',
+            'pos-applications': 'POS Application',
+            'business-name-applications': 'Business Name Reg',
+            'company-reg-applications': 'Company Registration'
+        };
+
+        // ==========================================
+        // ROLE CONSTANTS
+        // ==========================================
+        const ROLES = {
+            SUPER_ADMIN: 'super_admin',
+            OPERATIONS_MANAGER: 'operations_manager',
+            PROCESSING_OFFICER: 'processing_officer',
+            CONTENT_MANAGER: 'content_manager'
+        };
+
+        const ROLE_LABELS = {
+            [ROLES.SUPER_ADMIN]: 'Super Admin',
+            [ROLES.OPERATIONS_MANAGER]: 'Operations Manager',
+            [ROLES.PROCESSING_OFFICER]: 'Processing Officer',
+            [ROLES.CONTENT_MANAGER]: 'Content Manager'
+        };
+
+        function isSuperAdmin() { return currentStaff && currentStaff.role === ROLES.SUPER_ADMIN; }
+        function isOperationsManager() { return currentStaff && currentStaff.role === ROLES.OPERATIONS_MANAGER; }
+        function isProcessingOfficer() { return currentStaff && currentStaff.role === ROLES.PROCESSING_OFFICER; }
+        function isContentManager() { return currentStaff && currentStaff.role === ROLES.CONTENT_MANAGER; }
+
+        // ==========================================
+        // UPDATE SIDEBAR AVATAR - FIXED
+        // ==========================================
+        function updateSidebarAvatar(photoURL, fullName) {
+            if (photoURL && photoURL.trim() !== '') {
+                // Show image
+                userAvatar.innerHTML = `<img src="${photoURL}" alt="Profile">`;
+                userAvatar.style.background = 'transparent';
+                userAvatar.style.display = 'flex';
+                userAvatar.style.alignItems = 'center';
+                userAvatar.style.justifyContent = 'center';
+            } else {
+                // Show initials
+                const initial = (fullName || 'A')[0].toUpperCase();
+                userAvatar.innerHTML = initial;
+                userAvatar.style.background = 'var(--green)';
+                userAvatar.style.display = 'flex';
+                userAvatar.style.alignItems = 'center';
+                userAvatar.style.justifyContent = 'center';
+            }
+        }
+
+        // ==========================================
+        // AUTH GUARD
+        // ==========================================
+        const currentUrl = window.location.pathname + window.location.search;
+
+        auth.onAuthStateChanged(async (user) => {
+            if (!user) {
+                window.location.href = `login.html?redirect=${encodeURIComponent(currentUrl)}`;
+                return;
+            }
+
+            try {
+                const staffSnapshot = await db.collection('staff')
+                    .where('uid', '==', user.uid)
+                    .limit(1)
+                    .get();
+
+                if (staffSnapshot.empty) {
+                    await auth.signOut();
+                    window.location.href = `login.html?redirect=${encodeURIComponent(currentUrl)}`;
+                    return;
+                }
+
+                const staffDoc = staffSnapshot.docs[0];
+                const staffData = staffDoc.data();
+
+                if (!staffData.active) {
+                    await auth.signOut();
+                    alert('Your account has been deactivated. Contact your administrator.');
+                    window.location.href = `login.html?redirect=${encodeURIComponent(currentUrl)}`;
+                    return;
+                }
+
+                if (!staffData.activated) {
+                    await auth.signOut();
+                    window.location.href = `login.html?redirect=${encodeURIComponent(currentUrl)}`;
+                    return;
+                }
+
+                currentStaff = {
+                    id: staffDoc.id,
+                    ...staffData
+                };
+
+                userName.textContent = staffData.fullName || 'Admin User';
+                userRole.textContent = ROLE_LABELS[staffData.role] || 'Staff';
+                updateSidebarAvatar(staffData.profilePhoto, staffData.fullName);
+                logoutBtn.style.display = 'flex';
+
+                const usersNavLink = document.getElementById('usersNavLink');
+                if (usersNavLink) {
+                    usersNavLink.style.display = isSuperAdmin() ? 'flex' : 'none';
+                }
+
+                // Content Manager cannot access Clients
+                if (isContentManager()) {
+                    document.getElementById('mainContent').innerHTML = `
+                        <div class="access-denied">
+                            <i class="fas fa-lock"></i>
+                            <h2>Access Denied</h2>
+                            <p>You don't have permission to view clients. Please contact your administrator.</p>
+                        </div>
+                    `;
+                    document.getElementById('mainContent').classList.add('visible');
+                    document.getElementById('authLoadingOverlay').classList.add('hidden');
+                    return;
+                }
+
+                document.getElementById('authLoadingOverlay').classList.add('hidden');
+                document.getElementById('mainContent').classList.add('visible');
+
+                await loadAllApplications();
+                await loadClients();
+
+            } catch (error) {
+                console.error('Auth error:', error);
+                await auth.signOut();
+                window.location.href = `login.html?redirect=${encodeURIComponent(currentUrl)}`;
+            }
+        });
+
+        // ==========================================
+        // SIDEBAR TOGGLE
+        // ==========================================
+        function toggleSidebar() {
+            sidebar.classList.toggle('open');
+            sidebarOverlay.classList.toggle('active');
+            hamburger.classList.toggle('active');
+            document.body.style.overflow = sidebar.classList.contains('open') ? 'hidden' : '';
+        }
+
+        menuToggle.addEventListener('click', toggleSidebar);
+        sidebarOverlay.addEventListener('click', toggleSidebar);
+
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 992 && sidebar.classList.contains('open')) {
+                toggleSidebar();
+            }
+        });
+
+        // ==========================================
+        // LOGOUT
+        // ==========================================
+        logoutBtn.addEventListener('click', () => {
+            auth.signOut().then(() => {
+                window.location.href = 'login.html';
+            }).catch((error) => {
+                console.error('Logout error:', error);
+            });
+        });
+
+        // ==========================================
+        // TOAST
+        // ==========================================
+        let toastTimeout;
+
+        function showToast(message, isError = false) {
+            toastText.textContent = message;
+            toastMessage.className = 'toast-message show';
+            if (isError) {
+                toastMessage.classList.add('error');
+                toastMessage.querySelector('i').className = 'fas fa-exclamation-circle';
+            } else {
+                toastMessage.classList.remove('error');
+                toastMessage.querySelector('i').className = 'fas fa-check-circle';
+            }
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toastMessage.classList.remove('show');
+            }, 4000);
+        }
+
+        // ==========================================
+        // LOAD ALL APPLICATIONS
+        // ==========================================
+        async function loadAllApplications() {
+            allApplications = [];
+
+            for (const collectionName of APP_COLLECTIONS) {
+                try {
+                    const snapshot = await db.collection(collectionName).get();
+                    snapshot.forEach(doc => {
+                        const data = doc.data();
+                        allApplications.push({
+                            id: doc.id,
+                            collection: collectionName,
+                            serviceLabel: APP_LABELS[collectionName] || collectionName,
+                            ...data,
+                            // Extract client identifier (uid or email)
+                            clientUid: data.clientId || data.uid || data.userId || null,
+                            clientEmail: data.email || data.submittedData?.email || null
+                        });
+                    });
+                } catch (err) {
+                    console.warn(`Error loading ${collectionName}:`, err);
+                }
+            }
+        }
+
+        // ==========================================
+        // LOAD CLIENTS
+        // ==========================================
+        async function loadClients() {
+            try {
+                const snapshot = await db.collection('users')
+                    .orderBy('createdAt', 'desc')
+                    .get();
+
+                allClients = [];
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    allClients.push({
+                        id: doc.id,
+                        ...data
+                    });
+                });
+
+                updateStats();
+                applyFiltersAndRender();
+                document.getElementById('notificationCount').textContent = allClients.length;
+
+            } catch (error) {
+                console.error('Error loading clients:', error);
+                clientsTableBody.innerHTML = `
+                    <tr>
+                        <td colspan="6">
+                            <div style="text-align:center; padding:40px 20px; color:#dc2626;">
+                                <i class="fas fa-exclamation-circle" style="font-size:2rem; display:block; margin-bottom:12px;"></i>
+                                Error loading clients. Please refresh.
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+
+        // ==========================================
+        // UPDATE STATISTICS
+        // ==========================================
+        function updateStats() {
+            const total = allClients.length;
+            const active = allClients.filter(c => c.active !== false).length;
+            const inactive = allClients.filter(c => c.active === false).length;
+
+            // New this month
+            const now = new Date();
+            const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+            const newThisMonth = allClients.filter(c => {
+                if (!c.createdAt) return false;
+                const date = c.createdAt.seconds ? new Date(c.createdAt.seconds * 1000) : new Date(c.createdAt);
+                return date >= startOfMonth;
+            }).length;
+
+            document.getElementById('totalClients').textContent = total;
+            document.getElementById('activeClients').textContent = active;
+            document.getElementById('inactiveClients').textContent = inactive;
+            document.getElementById('newClients').textContent = newThisMonth;
+        }
+
+        // ==========================================
+        // GET CLIENT APPLICATIONS
+        // ==========================================
+        function getClientApplications(client) {
+            return allApplications.filter(app => {
+                // Match by uid or email
+                const matchByUid = app.clientUid && app.clientUid === client.uid;
+                const matchByEmail = app.clientEmail && app.clientEmail === client.email;
+                return matchByUid || matchByEmail;
+            });
+        }
+
+        // ==========================================
+        // RENDER CLIENTS TABLE - FIXED AVATAR
+        // ==========================================
+        function renderClients(clients) {
+            if (clients.length === 0) {
+                clientsTableBody.innerHTML = `
+                    <tr>
+                        <td colspan="6">
+                            <div class="empty-state">
+                                <i class="fas fa-users"></i>
+                                <p>${searchInput.value ? 'No clients match your search.' : 'No clients registered yet.'}</p>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            let html = '';
+            for (const client of clients) {
+                const statusClass = client.active !== false ? 'active' : 'inactive';
+                const statusLabel = client.active !== false ? 'Active' : 'Inactive';
+                const joined = client.createdAt ? new Date(client.createdAt.seconds * 1000).toLocaleDateString() : '—';
+                const appCount = getClientApplications(client).length;
+
+                const displayName = client.fullName || client.firstName || 'Unknown';
+                const initial = displayName.charAt(0).toUpperCase();
+                const photoURL = client.photoURL || null;
+
+                html += `
+                    <tr>
+                        <td>
+                            <div style="display:flex; align-items:center; gap:10px;">
+                                <div class="client-avatar">
+                                    ${photoURL && photoURL.trim() !== '' 
+                                        ? `<img src="${photoURL}" alt="${displayName}">` 
+                                        : initial}
+                                </div>
+                                <strong>${displayName}</strong>
+                            </div>
+                        </td>
+                        <td>${client.email || '—'}</td>
+                        <td>${client.phone || '—'}</td>
+                        <td><span class="status-badge ${statusClass}">${statusLabel}</span></td>
+                        <td>${joined}</td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="btn-sm view" data-id="${client.id}" title="View Details">
+                                    <i class="fas fa-eye"></i> View
+                                </button>
+                                <button class="btn-sm toggle" data-id="${client.id}" data-active="${client.active !== false}" title="Toggle Status">
+                                    <i class="fas ${client.active !== false ? 'fa-pause' : 'fa-play'}"></i>
+                                    ${client.active !== false ? 'Deactivate' : 'Activate'}
+                                </button>
+                                ${isSuperAdmin() ? `
+                                    <button class="btn-sm delete" data-id="${client.id}" title="Delete Client">
+                                        <i class="fas fa-trash"></i> Delete
+                                    </button>
+                                ` : ''}
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }
+
+            clientsTableBody.innerHTML = html;
+
+            // Attach events
+            document.querySelectorAll('.btn-sm.view').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const id = this.dataset.id;
+                    const client = allClients.find(c => c.id === id);
+                    if (client) openClientDetail(client);
+                });
+            });
+
+            document.querySelectorAll('.btn-sm.toggle').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const id = this.dataset.id;
+                    const currentActive = this.dataset.active === 'true';
+                    toggleClientStatus(id, currentActive);
+                });
+            });
+
+            document.querySelectorAll('.btn-sm.delete').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const id = this.dataset.id;
+                    if (confirm('Are you sure you want to delete this client? This action cannot be undone.')) {
+                        deleteClient(id);
+                    }
+                });
+            });
+        }
+
+        // ==========================================
+        // APPLY FILTERS
+        // ==========================================
+        function applyFiltersAndRender() {
+            const query = searchInput.value.toLowerCase().trim();
+            const status = statusFilter.value;
+
+            let filtered = allClients;
+
+            if (query) {
+                filtered = filtered.filter(c =>
+                    (c.fullName && c.fullName.toLowerCase().includes(query)) ||
+                    (c.firstName && c.firstName.toLowerCase().includes(query)) ||
+                    (c.lastName && c.lastName.toLowerCase().includes(query)) ||
+                    (c.email && c.email.toLowerCase().includes(query)) ||
+                    (c.phone && c.phone.toLowerCase().includes(query))
+                );
+            }
+
+            if (status !== 'all') {
+                const isActive = status === 'active';
+                filtered = filtered.filter(c => (c.active !== false) === isActive);
+            }
+
+            renderClients(filtered);
+        }
+
+        searchInput.addEventListener('input', applyFiltersAndRender);
+        statusFilter.addEventListener('change', applyFiltersAndRender);
+
+        // ==========================================
+        // TOGGLE CLIENT STATUS
+        // ==========================================
+        async function toggleClientStatus(id, currentActive) {
+            const newStatus = !currentActive;
+            const action = newStatus ? 'activate' : 'deactivate';
+
+            if (!confirm(`Are you sure you want to ${action} this client?`)) return;
+
+            try {
+                await db.collection('users').doc(id).update({
+                    active: newStatus,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                showToast(`Client ${action}d successfully.`);
+                await loadClients();
+            } catch (error) {
+                console.error('Error toggling client status:', error);
+                showToast('Error updating client status.', true);
+            }
+        }
+
+        // ==========================================
+        // DELETE CLIENT
+        // ==========================================
+        async function deleteClient(id) {
+            try {
+                await db.collection('users').doc(id).delete();
+                showToast('Client deleted successfully.');
+                await loadClients();
+            } catch (error) {
+                console.error('Error deleting client:', error);
+                showToast('Error deleting client.', true);
+            }
+        }
+
+        // ==========================================
+        // OPEN CLIENT DETAIL - FIXED AVATAR
+        // ==========================================
+        function openClientDetail(client) {
+            const statusClass = client.active !== false ? 'active' : 'inactive';
+            const statusLabel = client.active !== false ? 'Active' : 'Inactive';
+            const joined = client.createdAt ? new Date(client.createdAt.seconds * 1000).toLocaleString() : '—';
+            const lastLogin = client.lastLogin ? new Date(client.lastLogin.seconds * 1000).toLocaleString() : 'Never';
+
+            const displayName = client.fullName || client.firstName || 'Unknown';
+            const initial = displayName.charAt(0).toUpperCase();
+            const photoURL = client.photoURL || null;
+
+            // Get client applications
+            const clientApps = getClientApplications(client);
+
+            modalTitle.textContent = `Client: ${displayName}`;
+
+            let html = `
+                <div style="display:flex; align-items:center; gap:16px; margin-bottom:20px;">
+                    <div class="client-avatar" style="width:64px; height:64px; font-size:1.8rem;">
+                        ${photoURL && photoURL.trim() !== '' 
+                            ? `<img src="${photoURL}" alt="${displayName}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">` 
+                            : initial}
+                    </div>
+                    <div>
+                        <h3 style="font-size:1.2rem;">${displayName}</h3>
+                        <div>
+                            <span class="status-badge ${statusClass}">${statusLabel}</span>
+                            ${client.emailVerified ? '<span class="status-badge active" style="background:rgba(22,163,74,0.1);color:var(--green);">✅ Verified</span>' : '<span class="status-badge pending" style="background:rgba(249,115,22,0.1);color:var(--orange);">⏳ Unverified</span>'}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="detail-grid">
+                    <div class="detail-item">
+                        <div class="label">Email</div>
+                        <div class="value">${client.email || '—'}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="label">Phone</div>
+                        <div class="value">${client.phone || '—'}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="label">Joined</div>
+                        <div class="value">${joined}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="label">Last Login</div>
+                        <div class="value">${lastLogin}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="label">Account ID</div>
+                        <div class="value" style="font-size:0.8rem;color:var(--text-secondary);">${client.uid || client.id || '—'}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="label">Applications</div>
+                        <div class="value">${clientApps.length}</div>
+                    </div>
+                </div>
+            `;
+
+            // Application History
+            html += `
+                <div class="app-history">
+                    <h3>📋 Application History (${clientApps.length})</h3>
+            `;
+
+            if (clientApps.length === 0) {
+                html += `
+                    <div class="empty-state">
+                        <i class="fas fa-inbox" style="font-size:1.5rem;"></i>
+                        <p>No applications submitted by this client.</p>
+                    </div>
+                `;
+            } else {
+                html += `<ul class="app-list">`;
+                for (const app of clientApps) {
+                    const statusClass = app.status || 'new';
+                    const statusLabel = statusClass.charAt(0).toUpperCase() + statusClass.slice(1);
+                    const date = app.createdAt ? new Date(app.createdAt.seconds * 1000).toLocaleDateString() : '—';
+                    const serviceName = app.serviceName || app.service || APP_LABELS[app.collection] || app.collection;
+
+                    html += `
+                        <li>
+                            <div class="app-info">
+                                <span class="app-service">${serviceName}</span>
+                                <span class="app-date">${date}</span>
+                            </div>
+                            <div class="app-status">
+                                <span class="status-badge ${statusClass}">${statusLabel}</span>
+                            </div>
+                            <div class="app-action">
+                                <button class="btn-sm view" onclick="window.location.href='applications.html'">
+                                    <i class="fas fa-arrow-right"></i> View
+                                </button>
+                            </div>
+                        </li>
+                    `;
+                }
+                html += `</ul>`;
+            }
+
+            html += `</div>`;
+
+            modalBody.innerHTML = html;
+            detailModal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        // ==========================================
+        // MODAL CONTROLS
+        // ==========================================
+        function closeModal() {
+            detailModal.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        modalCloseBtn.addEventListener('click', closeModal);
+        detailModal.addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && detailModal.classList.contains('active')) {
+                closeModal();
+            }
+        });
+    </script>
+
+</body>
+</html>

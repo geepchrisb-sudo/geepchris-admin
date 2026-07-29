@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login — GeepChris Bridge</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        /* ===== RESET & BASE ===== */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #020617;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* ===== LOGIN CONTAINER ===== */
+        .login-container {
+            width: 100%;
+            padding: 20px;
+            max-width: 440px;
+        }
+
+        .login-card {
+            background: #0b1120;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 48px 40px;
+        }
+
+        /* ===== LOGO ===== */
+        .login-logo {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .login-logo img {
+            height: 50px;
+            width: auto;
+            display: inline-block;
+        }
+
+        .login-logo .logo-fallback {
+            display: none;
+            color: #fff;
+            font-size: 1.4rem;
+            font-weight: 800;
+        }
+
+        .login-logo .logo-fallback span {
+            color: #22c55e;
+        }
+
+        /* ===== TYPOGRAPHY ===== */
+        .login-card h1 {
+            color: #fff;
+            font-size: 1.5rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 8px;
+        }
+
+        .login-card p {
+            color: rgba(255,255,255,0.5);
+            text-align: center;
+            font-size: 0.9rem;
+            margin-bottom: 28px;
+        }
+
+        /* ===== RETURN URL INFO ===== */
+        .return-info {
+            color: rgba(255,255,255,0.25);
+            font-size: 0.7rem;
+            text-align: center;
+            margin-top: 16px;
+            display: none;
+        }
+
+        .return-info.visible {
+            display: block;
+        }
+
+        /* ===== FORM ===== */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            color: rgba(255,255,255,0.7);
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .form-group .input-wrapper {
+            position: relative;
+        }
+
+        .form-group .input-wrapper input {
+            width: 100%;
+            padding: 14px 16px;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.05);
+            color: #fff;
+            font-size: 0.95rem;
+            transition: 0.3s;
+            outline: none;
+            padding-right: 48px;
+        }
+
+        .form-group .input-wrapper input:focus {
+            border-color: #16a34a;
+            background: rgba(255,255,255,0.08);
+        }
+
+        .form-group .input-wrapper .password-toggle {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: rgba(255,255,255,0.4);
+            cursor: pointer;
+            font-size: 1.1rem;
+            padding: 4px;
+            transition: 0.3s;
+        }
+
+        .form-group .input-wrapper .password-toggle:hover {
+            color: rgba(255,255,255,0.8);
+        }
+
+        /* ===== BUTTON ===== */
+        .btn-submit {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 999px;
+            background: #16a34a;
+            color: #fff;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .btn-submit:hover {
+            background: #22c55e;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(34,197,94,0.3);
+        }
+
+        .btn-submit:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* ===== ERROR MESSAGE ===== */
+        .error-msg {
+            color: #dc2626;
+            font-size: 0.85rem;
+            text-align: center;
+            margin-top: 12px;
+            display: none;
+        }
+
+        .success-msg {
+            color: #22c55e;
+            font-size: 0.85rem;
+            text-align: center;
+            margin-top: 12px;
+            display: none;
+        }
+
+        /* ===== ACTIVATION FORM ===== */
+        #activationForm {
+            display: none;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+
+        #activationForm h2 {
+            color: #fff;
+            font-size: 1.2rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 4px;
+        }
+
+        #activationForm p {
+            color: rgba(255,255,255,0.5);
+            text-align: center;
+            font-size: 0.85rem;
+            margin-bottom: 20px;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 480px) {
+            .login-card {
+                padding: 32px 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-logo">
+                <img src="../assets/logo.png" alt="GeepChris Bridge" onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">
+                <span class="logo-fallback">GeepChris<span>Bridge</span></span>
+            </div>
+            <h1>Admin Login</h1>
+            <p>Access your GeepChris Bridge dashboard</p>
+
+            <!-- ===== RETURN URL INFO ===== -->
+            <div class="return-info" id="returnInfo">
+                <i class="fas fa-arrow-left"></i>
+                <span id="returnInfoText">Returning to dashboard</span>
+            </div>
+
+            <!-- ===== LOGIN FORM ===== -->
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <div class="input-wrapper">
+                        <input type="email" id="email" placeholder="admin@geepchrisbridge.com" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <div class="input-wrapper">
+                        <input type="password" id="password" placeholder="Enter your password" required>
+                        <button type="button" class="password-toggle" id="loginPasswordToggle" aria-label="Toggle password visibility">
+                            <i class="fa-regular fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                <button type="submit" class="btn-submit" id="loginBtn">Sign In</button>
+                <div id="errorMsg" class="error-msg"></div>
+                <div id="successMsg" class="success-msg"></div>
+            </form>
+
+            <!-- ===== ACTIVATION FORM ===== -->
+            <div id="activationForm">
+                <h2>Activate Your Account</h2>
+                <p>Welcome! This account hasn't been activated yet. Create your password to get started.</p>
+                <div class="form-group">
+                    <label for="activationPassword">Password</label>
+                    <div class="input-wrapper">
+                        <input type="password" id="activationPassword" placeholder="Min 6 characters" required>
+                        <button type="button" class="password-toggle" id="activationPasswordToggle" aria-label="Toggle password visibility">
+                            <i class="fa-regular fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="activationConfirmPassword">Confirm Password</label>
+                    <div class="input-wrapper">
+                        <input type="password" id="activationConfirmPassword" placeholder="Confirm your password" required>
+                        <button type="button" class="password-toggle" id="activationConfirmToggle" aria-label="Toggle password visibility">
+                            <i class="fa-regular fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                <button type="button" class="btn-submit" id="activateBtn">Activate Account</button>
+                <div id="activationError" class="error-msg"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== FIREBASE SDK ===== -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+    <script>
+        // ==========================================
+        // FIREBASE CONFIGURATION
+        // ==========================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyDHSOM7-GZXQ7tYySYTRiyCAHZOn9SQhhE",
+            authDomain: "geepchris-bridge.firebaseapp.com",
+            projectId: "geepchris-bridge",
+            storageBucket: "geepchris-bridge.firebasestorage.app",
+            messagingSenderId: "61219875988",
+            appId: "1:61219875988:web:a393bb73ce2b85991b9881"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // ==========================================
+        // DOM ELEMENTS
+        // ==========================================
+        const loginForm = document.getElementById('loginForm');
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+        const loginBtn = document.getElementById('loginBtn');
+        const errorMsg = document.getElementById('errorMsg');
+        const successMsg = document.getElementById('successMsg');
+
+        const activationForm = document.getElementById('activationForm');
+        const activationPassword = document.getElementById('activationPassword');
+        const activationConfirmPassword = document.getElementById('activationConfirmPassword');
+        const activateBtn = document.getElementById('activateBtn');
+        const activationError = document.getElementById('activationError');
+
+        const returnInfo = document.getElementById('returnInfo');
+        const returnInfoText = document.getElementById('returnInfoText');
+
+        // Password toggle buttons
+        const loginPasswordToggle = document.getElementById('loginPasswordToggle');
+        const activationPasswordToggle = document.getElementById('activationPasswordToggle');
+        const activationConfirmToggle = document.getElementById('activationConfirmToggle');
+
+        let pendingStaffEmail = '';
+        let pendingStaffDocId = '';
+        let pendingStaffData = null;
+        let returnUrl = null;
+        // Guard flag: prevents the "already logged in" auth listener below from
+        // racing with the activation flow and signing the brand-new user back
+        // out before the staff doc has been updated with their uid.
+        let isActivating = false;
+
+        // ==========================================
+        // GET RETURN URL
+        // ==========================================
+        function getReturnUrl() {
+            const params = new URLSearchParams(window.location.search);
+            const redirect = params.get('redirect');
+            if (redirect) {
+                returnUrl = decodeURIComponent(redirect);
+                // Show the return info
+                returnInfo.classList.add('visible');
+                const pageName = returnUrl.split('/').pop() || 'dashboard';
+                const cleanName = pageName.replace('.html', '').replace(/-/g, ' ');
+                returnInfoText.textContent = `↩️ Returning to: ${cleanName.charAt(0).toUpperCase() + cleanName.slice(1)}`;
+            } else {
+                returnInfo.classList.remove('visible');
+                returnUrl = 'index.html';
+            }
+            return returnUrl;
+        }
+
+        // ==========================================
+        // REDIRECT AFTER LOGIN
+        // ==========================================
+        function redirectAfterLogin() {
+            const target = returnUrl || 'index.html';
+            window.location.href = target;
+        }
+
+        // ==========================================
+        // PASSWORD TOGGLE FUNCTIONS
+        // ==========================================
+        function togglePasswordVisibility(inputElement, toggleButton) {
+            const icon = toggleButton.querySelector('i');
+            if (inputElement.type === 'password') {
+                inputElement.type = 'text';
+                icon.className = 'fa-regular fa-eye-slash';
+            } else {
+                inputElement.type = 'password';
+                icon.className = 'fa-regular fa-eye';
+            }
+        }
+
+        // Login password toggle
+        loginPasswordToggle.addEventListener('click', function() {
+            togglePasswordVisibility(passwordInput, this);
+        });
+
+        // Activation password toggle
+        activationPasswordToggle.addEventListener('click', function() {
+            togglePasswordVisibility(activationPassword, this);
+        });
+
+        // Activation confirm password toggle
+        activationConfirmToggle.addEventListener('click', function() {
+            togglePasswordVisibility(activationConfirmPassword, this);
+        });
+
+        // ==========================================
+        // LOGIN FUNCTION
+        // ==========================================
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = emailInput.value.trim();
+            const password = passwordInput.value;
+
+            // Clear previous messages
+            errorMsg.textContent = '';
+            errorMsg.style.display = 'none';
+            successMsg.textContent = '';
+            successMsg.style.display = 'none';
+            activationError.textContent = '';
+            activationError.style.display = 'none';
+
+            // Disable button during login
+            loginBtn.disabled = true;
+            loginBtn.textContent = 'Signing in...';
+
+            try {
+                // Step 1: Check if email exists in staff collection
+                const staffSnapshot = await db.collection('staff')
+                    .where('email', '==', email)
+                    .get();
+
+                if (staffSnapshot.empty) {
+                    errorMsg.textContent = 'This email isn\'t registered. Please contact your administrator.';
+                    errorMsg.style.display = 'block';
+                    loginBtn.disabled = false;
+                    loginBtn.textContent = 'Sign In';
+                    return;
+                }
+
+                const staffDoc = staffSnapshot.docs[0];
+                const staffData = staffDoc.data();
+
+                // Step 2: Check if staff is active
+                if (!staffData.active) {
+                    errorMsg.textContent = 'Your account has been deactivated. Contact your administrator.';
+                    errorMsg.style.display = 'block';
+                    loginBtn.disabled = false;
+                    loginBtn.textContent = 'Sign In';
+                    return;
+                }
+
+                // Step 3: Check if staff is activated
+                if (!staffData.activated) {
+                    // Show activation form
+                    pendingStaffEmail = email;
+                    pendingStaffDocId = staffDoc.id;
+                    pendingStaffData = staffData;
+                    
+                    loginForm.style.display = 'none';
+                    activationForm.style.display = 'block';
+                    
+                    loginBtn.disabled = false;
+                    loginBtn.textContent = 'Sign In';
+                    return;
+                }
+
+                // Step 4: Normal login - First try Firebase Auth
+                try {
+                    const userCredential = await auth.signInWithEmailAndPassword(email, password);
+                    
+                    // Update last login
+                    await db.collection('staff').doc(staffDoc.id).update({
+                        lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    
+                    // Redirect to return URL or dashboard
+                    redirectAfterLogin();
+                    
+                } catch (authError) {
+                    // Check if this is a Firebase Auth issue (user doesn't exist in Auth)
+                    if (authError.code === 'auth/user-not-found') {
+                        // This means the staff exists in Firestore but not in Firebase Auth
+                        // This shouldn't happen normally, but let's handle it
+                        errorMsg.textContent = 'Account setup incomplete. Please contact your administrator.';
+                        errorMsg.style.display = 'block';
+                    } else if (authError.code === 'auth/wrong-password') {
+                        errorMsg.textContent = 'Incorrect password. Please try again.';
+                        errorMsg.style.display = 'block';
+                    } else if (authError.code === 'auth/invalid-email') {
+                        errorMsg.textContent = 'Invalid email address.';
+                        errorMsg.style.display = 'block';
+                    } else if (authError.code === 'auth/too-many-requests') {
+                        errorMsg.textContent = 'Too many failed attempts. Please wait and try again.';
+                        errorMsg.style.display = 'block';
+                    } else {
+                        errorMsg.textContent = 'Login failed: ' + authError.message;
+                        errorMsg.style.display = 'block';
+                    }
+                }
+
+            } catch (error) {
+                console.error('Login error:', error);
+                errorMsg.textContent = 'An error occurred. Please try again.';
+                errorMsg.style.display = 'block';
+            } finally {
+                loginBtn.disabled = false;
+                loginBtn.textContent = 'Sign In';
+            }
+        });
+
+        // ==========================================
+        // ACTIVATE ACCOUNT FUNCTION
+        // ==========================================
+        activateBtn.addEventListener('click', async () => {
+            const password = activationPassword.value;
+            const confirm = activationConfirmPassword.value;
+
+            // Clear previous errors
+            activationError.textContent = '';
+            activationError.style.display = 'none';
+            activationError.style.color = '';
+
+            // Validate password
+            if (password.length < 6) {
+                activationError.textContent = 'Password must be at least 6 characters.';
+                activationError.style.display = 'block';
+                return;
+            }
+
+            if (password !== confirm) {
+                activationError.textContent = 'Passwords do not match.';
+                activationError.style.display = 'block';
+                return;
+            }
+
+            activateBtn.disabled = true;
+            activateBtn.textContent = 'Activating...';
+
+            // Tell the "already logged in" listener to stand down while we
+            // create the account and link it to the staff doc, so it can't
+            // race in and sign the new user back out first.
+            isActivating = true;
+
+            try {
+                // Check if user already exists in Firebase Auth (shouldn't happen)
+                try {
+                    // Try to create the account
+                    const userCredential = await auth.createUserWithEmailAndPassword(
+                        pendingStaffEmail,
+                        password
+                    );
+
+                    // Update staff document with UID
+                    await db.collection('staff').doc(pendingStaffDocId).update({
+                        uid: userCredential.user.uid,
+                        activated: true,
+                        lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+
+                    // Show success, then redirect to return URL or dashboard
+                    activateBtn.textContent = 'Activated!';
+                    activationError.style.color = '#22c55e';
+                    activationError.textContent = 'Account activated successfully! Redirecting...';
+                    activationError.style.display = 'block';
+                    setTimeout(() => {
+                        redirectAfterLogin();
+                    }, 1200);
+                    return;
+
+                } catch (createError) {
+                    isActivating = false;
+                    if (createError.code === 'auth/email-already-in-use') {
+                        // User already exists in Auth - this shouldn't happen for unactivated accounts
+                        // But we can try to link them
+                        activationError.textContent = 'This email is already registered. Please contact your administrator.';
+                        activationError.style.display = 'block';
+                    } else if (createError.code === 'auth/weak-password') {
+                        activationError.textContent = 'Password is too weak. Please use a stronger password.';
+                        activationError.style.display = 'block';
+                    } else if (createError.code === 'auth/invalid-email') {
+                        activationError.textContent = 'Invalid email address.';
+                        activationError.style.display = 'block';
+                    } else {
+                        activationError.textContent = 'Activation failed: ' + createError.message;
+                        activationError.style.display = 'block';
+                    }
+                }
+
+            } catch (error) {
+                isActivating = false;
+                console.error('Activation error:', error);
+                activationError.textContent = 'Activation failed. Please try again.';
+                activationError.style.display = 'block';
+            } finally {
+                activateBtn.disabled = false;
+                activateBtn.textContent = 'Activate Account';
+            }
+        });
+
+        // ==========================================
+        // CHECK IF ALREADY LOGGED IN
+        // ==========================================
+        document.addEventListener('DOMContentLoaded', () => {
+            // Get return URL first
+            getReturnUrl();
+
+            auth.onAuthStateChanged(async (user) => {
+                // Skip while an activation is in progress - the newly created
+                // user fires this listener before the staff doc has been
+                // linked with their uid, which would otherwise sign them out.
+                if (isActivating) return;
+
+                if (user) {
+                    // Check if user exists in staff collection
+                    try {
+                        const staffSnapshot = await db.collection('staff')
+                            .where('uid', '==', user.uid)
+                            .get();
+                        
+                        if (!staffSnapshot.empty) {
+                            const staffData = staffSnapshot.docs[0].data();
+                            if (staffData.active && staffData.activated) {
+                                // Already logged in, redirect to return URL or dashboard
+                                redirectAfterLogin();
+                            } else {
+                                // Staff is inactive or not activated, sign out
+                                await auth.signOut();
+                            }
+                        } else {
+                            // Not a staff member, sign out
+                            await auth.signOut();
+                        }
+                    } catch (error) {
+                        console.error('Auth check error:', error);
+                        await auth.signOut();
+                    }
+                }
+            });
+        });
+    </script>
+
+</body>
+</html>
