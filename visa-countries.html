@@ -386,7 +386,7 @@
             flex-wrap: wrap;
         }
 
-        /* ===== FORM ===== */
+        /* ===== FORM TABS ===== */
         .form-container {
             background: var(--bg-card);
             border: 1px solid var(--border);
@@ -405,6 +405,121 @@
             gap: 8px;
         }
 
+        /* ---- TABS ---- */
+        .tabs {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 24px;
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 12px;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            padding: 10px 20px;
+            border: none;
+            background: transparent;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-radius: 8px 8px 0 0;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-primary);
+            background: var(--bg-body);
+        }
+
+        .tab-btn.active {
+            color: var(--green);
+            background: rgba(22,163,74,0.05);
+        }
+
+        .tab-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: -14px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: var(--green);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* ---- TAB NAVIGATION BUTTONS ---- */
+        .tab-nav {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 24px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border);
+        }
+
+        .tab-nav .btn-prev,
+        .tab-nav .btn-next {
+            padding: 10px 24px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: 0.2s;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .tab-nav .btn-prev {
+            background: transparent;
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+        }
+
+        .tab-nav .btn-prev:hover {
+            background: var(--bg-body);
+        }
+
+        .tab-nav .btn-next {
+            background: var(--green);
+            color: #fff;
+        }
+
+        .tab-nav .btn-next:hover {
+            background: var(--green-light);
+        }
+
+        .tab-nav .btn-submit-tab {
+            padding: 10px 24px;
+            border: none;
+            border-radius: 8px;
+            background: var(--green);
+            color: #fff;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: 0.2s;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .tab-nav .btn-submit-tab:hover {
+            background: var(--green-light);
+        }
+
+        .tab-nav .btn-submit-tab:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* ---- FORM FIELDS ---- */
         .form-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -451,6 +566,13 @@
             outline: none;
             border-color: var(--green);
             box-shadow: 0 0 0 3px rgba(22,163,74,0.1);
+        }
+
+        .form-group input.error,
+        .form-group select.error,
+        .form-group textarea.error {
+            border-color: var(--red) !important;
+            box-shadow: 0 0 0 3px rgba(220,38,38,0.1) !important;
         }
 
         .form-group textarea {
@@ -501,17 +623,7 @@
             object-fit: cover;
             border-radius: 2px;
             border: 1px solid var(--border);
-        }
-
-        .form-group .price-input {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .form-group .price-input span {
-            font-weight: 700;
-            color: var(--text-secondary);
+            flex-shrink: 0;
         }
 
         .form-group .image-preview {
@@ -540,6 +652,193 @@
 
         .form-group .upload-status .error {
             color: var(--red);
+        }
+
+        /* ===== DYNAMIC LIST REPEATER ===== */
+        .dynamic-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .dynamic-list .list-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .dynamic-list .list-item input {
+            flex: 1;
+        }
+
+        .dynamic-list .list-item .remove-item {
+            width: 32px;
+            height: 32px;
+            border: none;
+            border-radius: 8px;
+            background: rgba(220,38,38,0.1);
+            color: var(--red);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.2s;
+            flex-shrink: 0;
+        }
+
+        .dynamic-list .list-item .remove-item:hover {
+            background: var(--red);
+            color: #fff;
+        }
+
+        .add-item-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 8px;
+            background: rgba(22,163,74,0.1);
+            color: var(--green);
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.85rem;
+            transition: 0.2s;
+            align-self: flex-start;
+        }
+
+        .add-item-btn:hover {
+            background: var(--green);
+            color: #fff;
+        }
+
+        /* ===== ALLOWED COUNTRIES SUGGESTIONS ===== */
+        .allowed-country-wrapper {
+            position: relative;
+        }
+
+        .allowed-country-suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 100;
+            display: none;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .allowed-country-suggestions.active {
+            display: block;
+        }
+
+        .allowed-country-suggestions .suggestion-item {
+            padding: 8px 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.85rem;
+            transition: 0.2s;
+        }
+
+        .allowed-country-suggestions .suggestion-item:hover {
+            background: var(--bg-body);
+        }
+
+        .allowed-country-suggestions .suggestion-item .flag-image {
+            width: 20px;
+            height: 14px;
+            object-fit: cover;
+            border-radius: 2px;
+            border: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+
+        /* ===== JOB REPEATER ===== */
+        .job-repeater {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .job-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--bg-body);
+        }
+
+        .job-item .job-fields {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            flex: 1;
+        }
+
+        .job-item .job-fields input {
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 0.85rem;
+            background: #fff;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .job-item .job-fields input:focus {
+            outline: none;
+            border-color: var(--green);
+            box-shadow: 0 0 0 3px rgba(22,163,74,0.1);
+        }
+
+        .job-item .remove-job {
+            width: 32px;
+            height: 32px;
+            border: none;
+            border-radius: 8px;
+            background: rgba(220,38,38,0.1);
+            color: var(--red);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.2s;
+            flex-shrink: 0;
+        }
+
+        .job-item .remove-job:hover {
+            background: var(--red);
+            color: #fff;
+        }
+
+        .add-job-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 8px;
+            background: rgba(22,163,74,0.1);
+            color: var(--green);
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.85rem;
+            transition: 0.2s;
+            align-self: flex-start;
+        }
+
+        .add-job-btn:hover {
+            background: var(--green);
+            color: #fff;
         }
 
         /* ===== IMAGE PREVIEW GRID ===== */
@@ -587,48 +886,6 @@
 
         .preview-item .remove-btn:hover {
             background: #b91c1c;
-        }
-
-        .form-actions {
-            display: flex;
-            gap: 12px;
-            margin-top: 20px;
-            justify-content: flex-end;
-        }
-
-        .form-actions .btn-cancel {
-            padding: 10px 24px;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            background: transparent;
-            color: var(--text-secondary);
-            cursor: pointer;
-            font-weight: 600;
-            transition: 0.2s;
-        }
-
-        .form-actions .btn-cancel:hover {
-            background: var(--bg-body);
-        }
-
-        .form-actions .btn-submit {
-            padding: 10px 24px;
-            border: none;
-            border-radius: 8px;
-            background: var(--green);
-            color: #fff;
-            cursor: pointer;
-            font-weight: 600;
-            transition: 0.2s;
-        }
-
-        .form-actions .btn-submit:hover {
-            background: var(--green-light);
-        }
-
-        .form-actions .btn-submit:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
         }
 
         /* ===== TABLE ===== */
@@ -754,6 +1011,7 @@
             border-radius: 2px;
             border: 1px solid #ddd;
             display: inline-block;
+            flex-shrink: 0;
         }
 
         .table-container .flag-fallback {
@@ -922,6 +1180,10 @@
             .form-grid {
                 grid-template-columns: 1fr;
             }
+            
+            .job-item .job-fields {
+                grid-template-columns: 1fr;
+            }
         }
 
         @media (max-width: 768px) {
@@ -948,6 +1210,27 @@
 
             .table-toolbar .search-box {
                 flex: 1 1 auto;
+            }
+            
+            .tabs {
+                gap: 2px;
+            }
+            
+            .tab-btn {
+                padding: 8px 12px;
+                font-size: 0.8rem;
+            }
+            
+            .tab-nav {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .tab-nav .btn-prev,
+            .tab-nav .btn-next,
+            .tab-nav .btn-submit-tab {
+                width: 100%;
+                text-align: center;
             }
         }
 
@@ -1097,98 +1380,226 @@
             <form id="visaForm">
                 <input type="hidden" id="editId" value="">
 
-                <div class="form-grid">
-                    <!-- Country Name -->
-                    <div class="form-group">
-                        <label>Country Name <span class="required">*</span></label>
-                        <div class="country-input-wrapper">
-                            <input type="text" id="countryInput" placeholder="Start typing a country name..." autocomplete="off">
-                            <div class="country-suggestions" id="countrySuggestions"></div>
+                <!-- TABS -->
+                <div class="tabs">
+                    <button type="button" class="tab-btn active" data-tab="tab1">Basic Info</button>
+                    <button type="button" class="tab-btn" data-tab="tab2">Pricing & Eligibility</button>
+                    <button type="button" class="tab-btn" data-tab="tab3">Requirements & Info</button>
+                    <button type="button" class="tab-btn" data-tab="tab4" id="jobsTabBtn">Jobs</button>
+                </div>
+
+                <!-- ===== TAB 1: BASIC INFO ===== -->
+                <div id="tab1" class="tab-content active">
+                    <div class="form-grid">
+                        <!-- Country Name -->
+                        <div class="form-group">
+                            <label>Country Name <span class="required">*</span></label>
+                            <div class="country-input-wrapper">
+                                <input type="text" id="countryInput" placeholder="Start typing a country name..." autocomplete="off">
+                                <div class="country-suggestions" id="countrySuggestions"></div>
+                            </div>
+                        </div>
+
+                        <!-- Visa Type -->
+                        <div class="form-group">
+                            <label>Visa Type <span class="required">*</span></label>
+                            <select id="visaTypeInput" required>
+                                <option value="">Select visa type</option>
+                                <option value="Visiting Visa">Visiting Visa</option>
+                                <option value="Tourist Visa">Tourist Visa</option>
+                                <option value="Work Visa">Work Visa</option>
+                                <option value="Study Visa">Study Visa</option>
+                                <option value="Business Visa">Business Visa</option>
+                                <option value="Transit Visa">Transit Visa</option>
+                                <option value="Medical Visa">Medical Visa</option>
+                                <option value="Student Visa">Student Visa</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+
+                        <!-- Other Visa Type -->
+                        <div class="form-group" id="otherVisaGroup" style="display:none;">
+                            <label>Specify Visa Type <span class="required">*</span></label>
+                            <input type="text" id="otherVisaInput" placeholder="Enter visa type...">
+                        </div>
+
+                        <!-- Duration -->
+                        <div class="form-group">
+                            <label>Processing Duration <span class="required">*</span></label>
+                            <select id="durationInput" required>
+                                <option value="">Select duration</option>
+                                <option value="7 days (1 week)">7 days (1 week)</option>
+                                <option value="2 weeks">2 weeks</option>
+                                <option value="3 weeks">3 weeks</option>
+                                <option value="30 days">30 days</option>
+                                <option value="2 months">2 months</option>
+                                <option value="3 months">3 months</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+
+                        <!-- Other Duration -->
+                        <div class="form-group" id="otherDurationGroup" style="display:none;">
+                            <label>Specify Duration <span class="required">*</span></label>
+                            <input type="text" id="otherDurationInput" placeholder="Enter duration...">
+                        </div>
+
+                        <!-- Description -->
+                        <div class="form-group" style="grid-column: 1 / -1;">
+                            <label>Description</label>
+                            <textarea id="descriptionInput" rows="3" placeholder="Enter a description of the visa process..."></textarea>
+                        </div>
+
+                        <!-- Additional Image -->
+                        <div class="form-group" style="grid-column: 1 / -1;">
+                            <label>Additional Image <span class="required">*</span></label>
+                            <input type="file" id="imageInput" accept="image/*" multiple>
+                            <small style="color:var(--text-secondary); display:block; margin-top:4px;">Upload up to 5 country images. At least one is required.</small>
+                            <div class="image-preview" id="imagePreview"></div>
+                            <div class="upload-status" id="uploadStatus"></div>
+                        </div>
+
+                        <!-- Status -->
+                        <div class="form-group">
+                            <label>Status</label>
+                            <select id="statusInput">
+                                <option value="available">Available</option>
+                                <option value="unavailable">Unavailable</option>
+                            </select>
                         </div>
                     </div>
-
-                    <!-- Visa Type -->
-                    <div class="form-group">
-                        <label>Visa Type <span class="required">*</span></label>
-                        <select id="visaTypeInput" required>
-                            <option value="">Select visa type</option>
-                            <option value="Visiting Visa">Visiting Visa</option>
-                            <option value="Tourist Visa">Tourist Visa</option>
-                            <option value="Work Visa">Work Visa</option>
-                            <option value="Study Visa">Study Visa</option>
-                            <option value="Business Visa">Business Visa</option>
-                            <option value="Transit Visa">Transit Visa</option>
-                            <option value="Medical Visa">Medical Visa</option>
-                            <option value="Student Visa">Student Visa</option>
-                            <option value="Other">Other</option>
-                        </select>
-                    </div>
-
-                    <!-- Other Visa Type -->
-                    <div class="form-group" id="otherVisaGroup" style="display:none;">
-                        <label>Specify Visa Type <span class="required">*</span></label>
-                        <input type="text" id="otherVisaInput" placeholder="Enter visa type...">
-                    </div>
-
-                    <!-- Price -->
-                    <div class="form-group">
-                        <label>Price (NGN) <span class="required">*</span></label>
-                        <div class="price-input">
-                            <span>₦</span>
-                            <input type="number" id="priceInput" placeholder="350000" required min="0">
-                        </div>
-                    </div>
-
-                    <!-- Duration -->
-                    <div class="form-group">
-                        <label>Processing Duration <span class="required">*</span></label>
-                        <select id="durationInput" required>
-                            <option value="">Select duration</option>
-                            <option value="7 days (1 week)">7 days (1 week)</option>
-                            <option value="2 weeks">2 weeks</option>
-                            <option value="3 weeks">3 weeks</option>
-                            <option value="30 days">30 days</option>
-                            <option value="2 months">2 months</option>
-                            <option value="3 months">3 months</option>
-                            <option value="Other">Other</option>
-                        </select>
-                    </div>
-
-                    <!-- Other Duration -->
-                    <div class="form-group" id="otherDurationGroup" style="display:none;">
-                        <label>Specify Duration <span class="required">*</span></label>
-                        <input type="text" id="otherDurationInput" placeholder="Enter duration...">
-                    </div>
-
-                    <!-- Description -->
-                    <div class="form-group" style="grid-column: 1 / -1;">
-                        <label>Description</label>
-                        <textarea id="descriptionInput" rows="3" placeholder="Enter a description of the visa process..."></textarea>
-                    </div>
-
-                    <!-- Additional Image -->
-                    <div class="form-group" style="grid-column: 1 / -1;">
-                        <label>Additional Image <span class="required">*</span></label>
-                        <input type="file" id="imageInput" accept="image/*" multiple>
-                        <small style="color:var(--text-secondary); display:block; margin-top:4px;">Upload up to 5 country images. At least one is required.</small>
-                        <div class="image-preview" id="imagePreview"></div>
-                        <div class="upload-status" id="uploadStatus"></div>
-                    </div>
-
-                    <!-- Status -->
-                    <div class="form-group">
-                        <label>Status</label>
-                        <select id="statusInput">
-                            <option value="available">Available</option>
-                            <option value="unavailable">Unavailable</option>
-                        </select>
+                    
+                    <!-- Tab Navigation -->
+                    <div class="tab-nav">
+                        <div></div>
+                        <button type="button" class="btn-next" data-next="tab2">Next →</button>
                     </div>
                 </div>
 
-                <div class="form-actions">
-                    <button type="button" class="btn-cancel" id="cancelBtn">Cancel</button>
-                    <button type="submit" class="btn-submit" id="submitBtn">Save Visa</button>
+                <!-- ===== TAB 2: PRICING & ELIGIBILITY ===== -->
+                <div id="tab2" class="tab-content">
+                    <div class="form-grid">
+                        <!-- Program Cost -->
+                        <div class="form-group">
+                            <label>Program Cost <span class="required">*</span></label>
+                            <input type="text" id="programCostInput" placeholder="e.g. €1,200 or ₦500,000" required>
+                        </div>
+
+                        <!-- Advance Payment -->
+                        <div class="form-group">
+                            <label>Advance Payment <span class="required">*</span></label>
+                            <input type="text" id="advanceInput" placeholder="e.g. €500" required>
+                        </div>
+
+                        <!-- Balance (After Readiness) -->
+                        <div class="form-group">
+                            <label>Balance (After Readiness) <span class="required">*</span></label>
+                            <input type="text" id="afterReadinessInput" placeholder="e.g. €700" required>
+                        </div>
+
+                        <!-- Allowed Countries -->
+                        <div class="form-group" style="grid-column: 1 / -1;">
+                            <label>Allowed Countries <span class="required">*</span></label>
+                            <div id="allowedCountriesContainer" class="dynamic-list">
+                                <div class="list-item">
+                                    <div class="allowed-country-wrapper" style="width:100%;">
+                                        <input type="text" class="allowed-country-input" placeholder="e.g. Nigeria, All nationalities" autocomplete="off">
+                                        <div class="allowed-country-suggestions"></div>
+                                    </div>
+                                    <button type="button" class="remove-item" style="display:none;"><i class="fas fa-times"></i></button>
+                                </div>
+                            </div>
+                            <button type="button" class="add-item-btn" id="addAllowedCountryBtn"><i class="fas fa-plus"></i> Add Country</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Tab Navigation -->
+                    <div class="tab-nav">
+                        <button type="button" class="btn-prev" data-prev="tab1">← Previous</button>
+                        <button type="button" class="btn-next" data-next="tab3">Next →</button>
+                    </div>
                 </div>
+
+                <!-- ===== TAB 3: REQUIREMENTS & INFO ===== -->
+                <div id="tab3" class="tab-content">
+                    <div class="form-grid">
+                        <!-- Documents Needed -->
+                        <div class="form-group" style="grid-column: 1 / -1;">
+                            <label>Documents Needed <span class="required">*</span></label>
+                            <div id="documentsNeededContainer" class="dynamic-list">
+                                <div class="list-item">
+                                    <input type="text" class="document-needed-input" placeholder="e.g. International Passport">
+                                    <button type="button" class="remove-item" style="display:none;"><i class="fas fa-times"></i></button>
+                                </div>
+                            </div>
+                            <button type="button" class="add-item-btn" id="addDocumentNeededBtn"><i class="fas fa-plus"></i> Add Document</button>
+                        </div>
+
+                        <!-- Documents Provided (Renamed to simpler English) -->
+                        <div class="form-group" style="grid-column: 1 / -1;">
+                            <label>What We Provide <span class="required">*</span></label>
+                            <div id="documentsProvidedContainer" class="dynamic-list">
+                                <div class="list-item">
+                                    <input type="text" class="document-provided-input" placeholder="e.g. Visa approval letter">
+                                    <button type="button" class="remove-item" style="display:none;"><i class="fas fa-times"></i></button>
+                                </div>
+                            </div>
+                            <button type="button" class="add-item-btn" id="addDocumentProvidedBtn"><i class="fas fa-plus"></i> Add Item</button>
+                        </div>
+
+                        <!-- Additional Information -->
+                        <div class="form-group" style="grid-column: 1 / -1;">
+                            <label>Additional Information</label>
+                            <textarea id="additionalInfoInput" rows="3" placeholder="Any extra details about this visa program..."></textarea>
+                        </div>
+                    </div>
+                    
+                    <!-- Tab Navigation -->
+                    <div class="tab-nav">
+                        <button type="button" class="btn-prev" data-prev="tab2">← Previous</button>
+                        <button type="button" class="btn-next" data-next="tab4" id="nextToJobsBtn">Next →</button>
+                        <button type="button" class="btn-submit-tab" id="submitBtnTab">Save Visa</button>
+                    </div>
+                </div>
+
+                <!-- ===== TAB 4: JOBS (conditional) ===== -->
+                <div id="tab4" class="tab-content">
+                    <div class="form-grid">
+                        <!-- Jobs Available Toggle -->
+                        <div class="form-group" style="grid-column: 1 / -1;">
+                            <label>Jobs Available</label>
+                            <div style="display:flex; align-items:center; gap:12px; margin-top:4px;">
+                                <label style="font-weight:400; font-size:0.9rem; cursor:pointer;">
+                                    <input type="checkbox" id="jobsAvailableToggle"> Yes, jobs are available
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Jobs Repeater -->
+                        <div class="form-group" style="grid-column: 1 / -1;">
+                            <div id="jobsContainer" style="display:none;">
+                                <label>Job List</label>
+                                <div id="jobsRepeater" class="job-repeater">
+                                    <div class="job-item">
+                                        <div class="job-fields">
+                                            <input type="text" class="job-title-input" placeholder="Job Title (e.g. Software Engineer)">
+                                            <input type="text" class="job-salary-input" placeholder="Salary (e.g. €500 - €800)">
+                                        </div>
+                                        <button type="button" class="remove-job" style="display:none;"><i class="fas fa-times"></i></button>
+                                    </div>
+                                </div>
+                                <button type="button" class="add-job-btn" id="addJobBtn"><i class="fas fa-plus"></i> Add Job</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Tab Navigation -->
+                    <div class="tab-nav">
+                        <button type="button" class="btn-prev" data-prev="tab3">← Previous</button>
+                        <button type="button" class="btn-submit-tab" id="submitBtnTabLast">Save Visa</button>
+                    </div>
+                </div>
+
             </form>
         </div>
 
@@ -1197,7 +1608,7 @@
             <div class="table-toolbar">
                 <div class="search-box">
                     <i class="fas fa-search"></i>
-                    <input type="text" id="searchInput" placeholder="Search by country, visa type, price, status...">
+                    <input type="text" id="searchInput" placeholder="Search by country, visa type, status...">
                 </div>
                 <div class="filter-dropdown">
                     <label for="filterStatus">Filter:</label>
@@ -1216,14 +1627,13 @@
                             <th>Country</th>
                             <th>Visa Type</th>
                             <th>Duration</th>
-                            <th>Price</th>
                             <th>Status</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody id="visaTableBody">
                         <tr>
-                            <td colspan="7">
+                            <td colspan="6">
                                 <div class="loading">
                                     <i class="fas fa-spinner"></i> Loading visa countries...
                                 </div>
@@ -1277,15 +1687,12 @@
         const visaForm = document.getElementById('visaForm');
         const formTitle = document.getElementById('formTitle');
         const editId = document.getElementById('editId');
-        const submitBtn = document.getElementById('submitBtn');
-        const cancelBtn = document.getElementById('cancelBtn');
 
         const countryInput = document.getElementById('countryInput');
         const countrySuggestions = document.getElementById('countrySuggestions');
         const visaTypeInput = document.getElementById('visaTypeInput');
         const otherVisaGroup = document.getElementById('otherVisaGroup');
         const otherVisaInput = document.getElementById('otherVisaInput');
-        const priceInput = document.getElementById('priceInput');
         const durationInput = document.getElementById('durationInput');
         const otherDurationGroup = document.getElementById('otherDurationGroup');
         const otherDurationInput = document.getElementById('otherDurationInput');
@@ -1294,6 +1701,31 @@
         const imagePreview = document.getElementById('imagePreview');
         const uploadStatus = document.getElementById('uploadStatus');
         const statusInput = document.getElementById('statusInput');
+
+        // New fields
+        const programCostInput = document.getElementById('programCostInput');
+        const advanceInput = document.getElementById('advanceInput');
+        const afterReadinessInput = document.getElementById('afterReadinessInput');
+        const additionalInfoInput = document.getElementById('additionalInfoInput');
+        const jobsAvailableToggle = document.getElementById('jobsAvailableToggle');
+        const jobsContainer = document.getElementById('jobsContainer');
+        const jobsRepeater = document.getElementById('jobsRepeater');
+        const addJobBtn = document.getElementById('addJobBtn');
+        const allowedCountriesContainer = document.getElementById('allowedCountriesContainer');
+        const addAllowedCountryBtn = document.getElementById('addAllowedCountryBtn');
+        const documentsNeededContainer = document.getElementById('documentsNeededContainer');
+        const addDocumentNeededBtn = document.getElementById('addDocumentNeededBtn');
+        const documentsProvidedContainer = document.getElementById('documentsProvidedContainer');
+        const addDocumentProvidedBtn = document.getElementById('addDocumentProvidedBtn');
+
+        // Tab navigation
+        const tabBtns = document.querySelectorAll('.tab-btn');
+        const tabContents = document.querySelectorAll('.tab-content');
+        const btnNext = document.querySelectorAll('.btn-next');
+        const btnPrev = document.querySelectorAll('.btn-prev');
+        const submitBtnTab = document.getElementById('submitBtnTab');
+        const submitBtnTabLast = document.getElementById('submitBtnTabLast');
+        const nextToJobsBtn = document.getElementById('nextToJobsBtn');
 
         const successMessage = document.getElementById('successMessage');
         const successText = document.getElementById('successText');
@@ -1491,6 +1923,7 @@
                 align-items: center;
                 gap: 12px;
                 max-width: 440px;
+                white-space: pre-line;
             `;
             toast.innerHTML = `
                 <i class="fas ${isError ? 'fa-exclamation-circle' : 'fa-check-circle'}"></i>
@@ -1501,7 +1934,7 @@
             clearTimeout(toastTimeout);
             toastTimeout = setTimeout(() => {
                 toast.remove();
-            }, 4000);
+            }, isError ? 6000 : 4000);
         }
 
         // ==========================================
@@ -1520,7 +1953,7 @@
                 console.error('Error loading visas:', error);
                 visaTableBody.innerHTML = `
                     <tr>
-                        <td colspan="7">
+                        <td colspan="6">
                             <div style="text-align:center; padding:40px 20px; color:#dc2626;">
                                 <i class="fas fa-exclamation-circle" style="font-size:2rem; display:block; margin-bottom:12px;"></i>
                                 Error loading data. Please refresh.
@@ -1540,205 +1973,234 @@
         }
 
         // ==========================================
-        // COUNTRY DATA — 195 COUNTRIES
+        // COUNTRY DATA — 195 COUNTRIES WITH SVG FLAGS
         // ==========================================
         const countries = [
-            { name: "Afghanistan", flag: "🇦🇫", flagUrl: "https://flagcdn.com/w40/af.png" },
-            { name: "Albania", flag: "🇦🇱", flagUrl: "https://flagcdn.com/w40/al.png" },
-            { name: "Algeria", flag: "🇩🇿", flagUrl: "https://flagcdn.com/w40/dz.png" },
-            { name: "Andorra", flag: "🇦🇩", flagUrl: "https://flagcdn.com/w40/ad.png" },
-            { name: "Angola", flag: "🇦🇴", flagUrl: "https://flagcdn.com/w40/ao.png" },
-            { name: "Antigua and Barbuda", flag: "🇦🇬", flagUrl: "https://flagcdn.com/w40/ag.png" },
-            { name: "Argentina", flag: "🇦🇷", flagUrl: "https://flagcdn.com/w40/ar.png" },
-            { name: "Armenia", flag: "🇦🇲", flagUrl: "https://flagcdn.com/w40/am.png" },
-            { name: "Australia", flag: "🇦🇺", flagUrl: "https://flagcdn.com/w40/au.png" },
-            { name: "Austria", flag: "🇦🇹", flagUrl: "https://flagcdn.com/w40/at.png" },
-            { name: "Azerbaijan", flag: "🇦🇿", flagUrl: "https://flagcdn.com/w40/az.png" },
-            { name: "Bahamas", flag: "🇧🇸", flagUrl: "https://flagcdn.com/w40/bs.png" },
-            { name: "Bahrain", flag: "🇧🇭", flagUrl: "https://flagcdn.com/w40/bh.png" },
-            { name: "Bangladesh", flag: "🇧🇩", flagUrl: "https://flagcdn.com/w40/bd.png" },
-            { name: "Barbados", flag: "🇧🇧", flagUrl: "https://flagcdn.com/w40/bb.png" },
-            { name: "Belarus", flag: "🇧🇾", flagUrl: "https://flagcdn.com/w40/by.png" },
-            { name: "Belgium", flag: "🇧🇪", flagUrl: "https://flagcdn.com/w40/be.png" },
-            { name: "Belize", flag: "🇧🇿", flagUrl: "https://flagcdn.com/w40/bz.png" },
-            { name: "Benin", flag: "🇧🇯", flagUrl: "https://flagcdn.com/w40/bj.png" },
-            { name: "Bhutan", flag: "🇧🇹", flagUrl: "https://flagcdn.com/w40/bt.png" },
-            { name: "Bolivia", flag: "🇧🇴", flagUrl: "https://flagcdn.com/w40/bo.png" },
-            { name: "Bosnia and Herzegovina", flag: "🇧🇦", flagUrl: "https://flagcdn.com/w40/ba.png" },
-            { name: "Botswana", flag: "🇧🇼", flagUrl: "https://flagcdn.com/w40/bw.png" },
-            { name: "Brazil", flag: "🇧🇷", flagUrl: "https://flagcdn.com/w40/br.png" },
-            { name: "Brunei", flag: "🇧🇳", flagUrl: "https://flagcdn.com/w40/bn.png" },
-            { name: "Bulgaria", flag: "🇧🇬", flagUrl: "https://flagcdn.com/w40/bg.png" },
-            { name: "Burkina Faso", flag: "🇧🇫", flagUrl: "https://flagcdn.com/w40/bf.png" },
-            { name: "Burundi", flag: "🇧🇮", flagUrl: "https://flagcdn.com/w40/bi.png" },
-            { name: "Cabo Verde", flag: "🇨🇻", flagUrl: "https://flagcdn.com/w40/cv.png" },
-            { name: "Cambodia", flag: "🇰🇭", flagUrl: "https://flagcdn.com/w40/kh.png" },
-            { name: "Cameroon", flag: "🇨🇲", flagUrl: "https://flagcdn.com/w40/cm.png" },
-            { name: "Canada", flag: "🇨🇦", flagUrl: "https://flagcdn.com/w40/ca.png" },
-            { name: "Central African Republic", flag: "🇨🇫", flagUrl: "https://flagcdn.com/w40/cf.png" },
-            { name: "Chad", flag: "🇹🇩", flagUrl: "https://flagcdn.com/w40/td.png" },
-            { name: "Chile", flag: "🇨🇱", flagUrl: "https://flagcdn.com/w40/cl.png" },
-            { name: "China", flag: "🇨🇳", flagUrl: "https://flagcdn.com/w40/cn.png" },
-            { name: "Colombia", flag: "🇨🇴", flagUrl: "https://flagcdn.com/w40/co.png" },
-            { name: "Comoros", flag: "🇰🇲", flagUrl: "https://flagcdn.com/w40/km.png" },
-            { name: "Congo", flag: "🇨🇬", flagUrl: "https://flagcdn.com/w40/cg.png" },
-            { name: "Costa Rica", flag: "🇨🇷", flagUrl: "https://flagcdn.com/w40/cr.png" },
-            { name: "Côte d'Ivoire", flag: "🇨🇮", flagUrl: "https://flagcdn.com/w40/ci.png" },
-            { name: "Croatia", flag: "🇭🇷", flagUrl: "https://flagcdn.com/w40/hr.png" },
-            { name: "Cuba", flag: "🇨🇺", flagUrl: "https://flagcdn.com/w40/cu.png" },
-            { name: "Cyprus", flag: "🇨🇾", flagUrl: "https://flagcdn.com/w40/cy.png" },
-            { name: "Czech Republic", flag: "🇨🇿", flagUrl: "https://flagcdn.com/w40/cz.png" },
-            { name: "Democratic Republic of the Congo", flag: "🇨🇩", flagUrl: "https://flagcdn.com/w40/cd.png" },
-            { name: "Denmark", flag: "🇩🇰", flagUrl: "https://flagcdn.com/w40/dk.png" },
-            { name: "Djibouti", flag: "🇩🇯", flagUrl: "https://flagcdn.com/w40/dj.png" },
-            { name: "Dominica", flag: "🇩🇲", flagUrl: "https://flagcdn.com/w40/dm.png" },
-            { name: "Dominican Republic", flag: "🇩🇴", flagUrl: "https://flagcdn.com/w40/do.png" },
-            { name: "Ecuador", flag: "🇪🇨", flagUrl: "https://flagcdn.com/w40/ec.png" },
-            { name: "Egypt", flag: "🇪🇬", flagUrl: "https://flagcdn.com/w40/eg.png" },
-            { name: "El Salvador", flag: "🇸🇻", flagUrl: "https://flagcdn.com/w40/sv.png" },
-            { name: "Equatorial Guinea", flag: "🇬🇶", flagUrl: "https://flagcdn.com/w40/gq.png" },
-            { name: "Eritrea", flag: "🇪🇷", flagUrl: "https://flagcdn.com/w40/er.png" },
-            { name: "Estonia", flag: "🇪🇪", flagUrl: "https://flagcdn.com/w40/ee.png" },
-            { name: "Eswatini", flag: "🇸🇿", flagUrl: "https://flagcdn.com/w40/sz.png" },
-            { name: "Ethiopia", flag: "🇪🇹", flagUrl: "https://flagcdn.com/w40/et.png" },
-            { name: "Fiji", flag: "🇫🇯", flagUrl: "https://flagcdn.com/w40/fj.png" },
-            { name: "Finland", flag: "🇫🇮", flagUrl: "https://flagcdn.com/w40/fi.png" },
-            { name: "France", flag: "🇫🇷", flagUrl: "https://flagcdn.com/w40/fr.png" },
-            { name: "Gabon", flag: "🇬🇦", flagUrl: "https://flagcdn.com/w40/ga.png" },
-            { name: "Gambia", flag: "🇬🇲", flagUrl: "https://flagcdn.com/w40/gm.png" },
-            { name: "Georgia", flag: "🇬🇪", flagUrl: "https://flagcdn.com/w40/ge.png" },
-            { name: "Germany", flag: "🇩🇪", flagUrl: "https://flagcdn.com/w40/de.png" },
-            { name: "Ghana", flag: "🇬🇭", flagUrl: "https://flagcdn.com/w40/gh.png" },
-            { name: "Greece", flag: "🇬🇷", flagUrl: "https://flagcdn.com/w40/gr.png" },
-            { name: "Grenada", flag: "🇬🇩", flagUrl: "https://flagcdn.com/w40/gd.png" },
-            { name: "Guatemala", flag: "🇬🇹", flagUrl: "https://flagcdn.com/w40/gt.png" },
-            { name: "Guinea", flag: "🇬🇳", flagUrl: "https://flagcdn.com/w40/gn.png" },
-            { name: "Guinea-Bissau", flag: "🇬🇼", flagUrl: "https://flagcdn.com/w40/gw.png" },
-            { name: "Guyana", flag: "🇬🇾", flagUrl: "https://flagcdn.com/w40/gy.png" },
-            { name: "Haiti", flag: "🇭🇹", flagUrl: "https://flagcdn.com/w40/ht.png" },
-            { name: "Honduras", flag: "🇭🇳", flagUrl: "https://flagcdn.com/w40/hn.png" },
-            { name: "Hungary", flag: "🇭🇺", flagUrl: "https://flagcdn.com/w40/hu.png" },
-            { name: "Iceland", flag: "🇮🇸", flagUrl: "https://flagcdn.com/w40/is.png" },
-            { name: "India", flag: "🇮🇳", flagUrl: "https://flagcdn.com/w40/in.png" },
-            { name: "Indonesia", flag: "🇮🇩", flagUrl: "https://flagcdn.com/w40/id.png" },
-            { name: "Iran", flag: "🇮🇷", flagUrl: "https://flagcdn.com/w40/ir.png" },
-            { name: "Iraq", flag: "🇮🇶", flagUrl: "https://flagcdn.com/w40/iq.png" },
-            { name: "Ireland", flag: "🇮🇪", flagUrl: "https://flagcdn.com/w40/ie.png" },
-            { name: "Israel", flag: "🇮🇱", flagUrl: "https://flagcdn.com/w40/il.png" },
-            { name: "Italy", flag: "🇮🇹", flagUrl: "https://flagcdn.com/w40/it.png" },
-            { name: "Jamaica", flag: "🇯🇲", flagUrl: "https://flagcdn.com/w40/jm.png" },
-            { name: "Japan", flag: "🇯🇵", flagUrl: "https://flagcdn.com/w40/jp.png" },
-            { name: "Jordan", flag: "🇯🇴", flagUrl: "https://flagcdn.com/w40/jo.png" },
-            { name: "Kazakhstan", flag: "🇰🇿", flagUrl: "https://flagcdn.com/w40/kz.png" },
-            { name: "Kenya", flag: "🇰🇪", flagUrl: "https://flagcdn.com/w40/ke.png" },
-            { name: "Kiribati", flag: "🇰🇮", flagUrl: "https://flagcdn.com/w40/ki.png" },
-            { name: "Kuwait", flag: "🇰🇼", flagUrl: "https://flagcdn.com/w40/kw.png" },
-            { name: "Kyrgyzstan", flag: "🇰🇬", flagUrl: "https://flagcdn.com/w40/kg.png" },
-            { name: "Laos", flag: "🇱🇦", flagUrl: "https://flagcdn.com/w40/la.png" },
-            { name: "Latvia", flag: "🇱🇻", flagUrl: "https://flagcdn.com/w40/lv.png" },
-            { name: "Lebanon", flag: "🇱🇧", flagUrl: "https://flagcdn.com/w40/lb.png" },
-            { name: "Lesotho", flag: "🇱🇸", flagUrl: "https://flagcdn.com/w40/ls.png" },
-            { name: "Liberia", flag: "🇱🇷", flagUrl: "https://flagcdn.com/w40/lr.png" },
-            { name: "Libya", flag: "🇱🇾", flagUrl: "https://flagcdn.com/w40/ly.png" },
-            { name: "Liechtenstein", flag: "🇱🇮", flagUrl: "https://flagcdn.com/w40/li.png" },
-            { name: "Lithuania", flag: "🇱🇹", flagUrl: "https://flagcdn.com/w40/lt.png" },
-            { name: "Luxembourg", flag: "🇱🇺", flagUrl: "https://flagcdn.com/w40/lu.png" },
-            { name: "Madagascar", flag: "🇲🇬", flagUrl: "https://flagcdn.com/w40/mg.png" },
-            { name: "Malawi", flag: "🇲🇼", flagUrl: "https://flagcdn.com/w40/mw.png" },
-            { name: "Malaysia", flag: "🇲🇾", flagUrl: "https://flagcdn.com/w40/my.png" },
-            { name: "Maldives", flag: "🇲🇻", flagUrl: "https://flagcdn.com/w40/mv.png" },
-            { name: "Mali", flag: "🇲🇱", flagUrl: "https://flagcdn.com/w40/ml.png" },
-            { name: "Malta", flag: "🇲🇹", flagUrl: "https://flagcdn.com/w40/mt.png" },
-            { name: "Marshall Islands", flag: "🇲🇭", flagUrl: "https://flagcdn.com/w40/mh.png" },
-            { name: "Mauritania", flag: "🇲🇷", flagUrl: "https://flagcdn.com/w40/mr.png" },
-            { name: "Mauritius", flag: "🇲🇺", flagUrl: "https://flagcdn.com/w40/mu.png" },
-            { name: "Mexico", flag: "🇲🇽", flagUrl: "https://flagcdn.com/w40/mx.png" },
-            { name: "Micronesia", flag: "🇫🇲", flagUrl: "https://flagcdn.com/w40/fm.png" },
-            { name: "Moldova", flag: "🇲🇩", flagUrl: "https://flagcdn.com/w40/md.png" },
-            { name: "Monaco", flag: "🇲🇨", flagUrl: "https://flagcdn.com/w40/mc.png" },
-            { name: "Mongolia", flag: "🇲🇳", flagUrl: "https://flagcdn.com/w40/mn.png" },
-            { name: "Montenegro", flag: "🇲🇪", flagUrl: "https://flagcdn.com/w40/me.png" },
-            { name: "Morocco", flag: "🇲🇦", flagUrl: "https://flagcdn.com/w40/ma.png" },
-            { name: "Mozambique", flag: "🇲🇿", flagUrl: "https://flagcdn.com/w40/mz.png" },
-            { name: "Myanmar", flag: "🇲🇲", flagUrl: "https://flagcdn.com/w40/mm.png" },
-            { name: "Namibia", flag: "🇳🇦", flagUrl: "https://flagcdn.com/w40/na.png" },
-            { name: "Nauru", flag: "🇳🇷", flagUrl: "https://flagcdn.com/w40/nr.png" },
-            { name: "Nepal", flag: "🇳🇵", flagUrl: "https://flagcdn.com/w40/np.png" },
-            { name: "Netherlands", flag: "🇳🇱", flagUrl: "https://flagcdn.com/w40/nl.png" },
-            { name: "New Zealand", flag: "🇳🇿", flagUrl: "https://flagcdn.com/w40/nz.png" },
-            { name: "Nicaragua", flag: "🇳🇮", flagUrl: "https://flagcdn.com/w40/ni.png" },
-            { name: "Niger", flag: "🇳🇪", flagUrl: "https://flagcdn.com/w40/ne.png" },
-            { name: "Nigeria", flag: "🇳🇬", flagUrl: "https://flagcdn.com/w40/ng.png" },
-            { name: "North Korea", flag: "🇰🇵", flagUrl: "https://flagcdn.com/w40/kp.png" },
-            { name: "North Macedonia", flag: "🇲🇰", flagUrl: "https://flagcdn.com/w40/mk.png" },
-            { name: "Norway", flag: "🇳🇴", flagUrl: "https://flagcdn.com/w40/no.png" },
-            { name: "Oman", flag: "🇴🇲", flagUrl: "https://flagcdn.com/w40/om.png" },
-            { name: "Pakistan", flag: "🇵🇰", flagUrl: "https://flagcdn.com/w40/pk.png" },
-            { name: "Palau", flag: "🇵🇼", flagUrl: "https://flagcdn.com/w40/pw.png" },
-            { name: "Panama", flag: "🇵🇦", flagUrl: "https://flagcdn.com/w40/pa.png" },
-            { name: "Papua New Guinea", flag: "🇵🇬", flagUrl: "https://flagcdn.com/w40/pg.png" },
-            { name: "Paraguay", flag: "🇵🇾", flagUrl: "https://flagcdn.com/w40/py.png" },
-            { name: "Peru", flag: "🇵🇪", flagUrl: "https://flagcdn.com/w40/pe.png" },
-            { name: "Philippines", flag: "🇵🇭", flagUrl: "https://flagcdn.com/w40/ph.png" },
-            { name: "Poland", flag: "🇵🇱", flagUrl: "https://flagcdn.com/w40/pl.png" },
-            { name: "Portugal", flag: "🇵🇹", flagUrl: "https://flagcdn.com/w40/pt.png" },
-            { name: "Qatar", flag: "🇶🇦", flagUrl: "https://flagcdn.com/w40/qa.png" },
-            { name: "Romania", flag: "🇷🇴", flagUrl: "https://flagcdn.com/w40/ro.png" },
-            { name: "Russia", flag: "🇷🇺", flagUrl: "https://flagcdn.com/w40/ru.png" },
-            { name: "Rwanda", flag: "🇷🇼", flagUrl: "https://flagcdn.com/w40/rw.png" },
-            { name: "Saint Kitts and Nevis", flag: "🇰🇳", flagUrl: "https://flagcdn.com/w40/kn.png" },
-            { name: "Saint Lucia", flag: "🇱🇨", flagUrl: "https://flagcdn.com/w40/lc.png" },
-            { name: "Saint Vincent and the Grenadines", flag: "🇻🇨", flagUrl: "https://flagcdn.com/w40/vc.png" },
-            { name: "Samoa", flag: "🇼🇸", flagUrl: "https://flagcdn.com/w40/ws.png" },
-            { name: "San Marino", flag: "🇸🇲", flagUrl: "https://flagcdn.com/w40/sm.png" },
-            { name: "São Tomé and Príncipe", flag: "🇸🇹", flagUrl: "https://flagcdn.com/w40/st.png" },
-            { name: "Saudi Arabia", flag: "🇸🇦", flagUrl: "https://flagcdn.com/w40/sa.png" },
-            { name: "Senegal", flag: "🇸🇳", flagUrl: "https://flagcdn.com/w40/sn.png" },
-            { name: "Serbia", flag: "🇷🇸", flagUrl: "https://flagcdn.com/w40/rs.png" },
-            { name: "Seychelles", flag: "🇸🇨", flagUrl: "https://flagcdn.com/w40/sc.png" },
-            { name: "Sierra Leone", flag: "🇸🇱", flagUrl: "https://flagcdn.com/w40/sl.png" },
-            { name: "Singapore", flag: "🇸🇬", flagUrl: "https://flagcdn.com/w40/sg.png" },
-            { name: "Slovakia", flag: "🇸🇰", flagUrl: "https://flagcdn.com/w40/sk.png" },
-            { name: "Slovenia", flag: "🇸🇮", flagUrl: "https://flagcdn.com/w40/si.png" },
-            { name: "Solomon Islands", flag: "🇸🇧", flagUrl: "https://flagcdn.com/w40/sb.png" },
-            { name: "Somalia", flag: "🇸🇴", flagUrl: "https://flagcdn.com/w40/so.png" },
-            { name: "South Africa", flag: "🇿🇦", flagUrl: "https://flagcdn.com/w40/za.png" },
-            { name: "South Korea", flag: "🇰🇷", flagUrl: "https://flagcdn.com/w40/kr.png" },
-            { name: "South Sudan", flag: "🇸🇸", flagUrl: "https://flagcdn.com/w40/ss.png" },
-            { name: "Spain", flag: "🇪🇸", flagUrl: "https://flagcdn.com/w40/es.png" },
-            { name: "Sri Lanka", flag: "🇱🇰", flagUrl: "https://flagcdn.com/w40/lk.png" },
-            { name: "Sudan", flag: "🇸🇩", flagUrl: "https://flagcdn.com/w40/sd.png" },
-            { name: "Suriname", flag: "🇸🇷", flagUrl: "https://flagcdn.com/w40/sr.png" },
-            { name: "Sweden", flag: "🇸🇪", flagUrl: "https://flagcdn.com/w40/se.png" },
-            { name: "Switzerland", flag: "🇨🇭", flagUrl: "https://flagcdn.com/w40/ch.png" },
-            { name: "Syria", flag: "🇸🇾", flagUrl: "https://flagcdn.com/w40/sy.png" },
-            { name: "Tajikistan", flag: "🇹🇯", flagUrl: "https://flagcdn.com/w40/tj.png" },
-            { name: "Tanzania", flag: "🇹🇿", flagUrl: "https://flagcdn.com/w40/tz.png" },
-            { name: "Thailand", flag: "🇹🇭", flagUrl: "https://flagcdn.com/w40/th.png" },
-            { name: "Timor-Leste", flag: "🇹🇱", flagUrl: "https://flagcdn.com/w40/tl.png" },
-            { name: "Togo", flag: "🇹🇬", flagUrl: "https://flagcdn.com/w40/tg.png" },
-            { name: "Tonga", flag: "🇹🇴", flagUrl: "https://flagcdn.com/w40/to.png" },
-            { name: "Trinidad and Tobago", flag: "🇹🇹", flagUrl: "https://flagcdn.com/w40/tt.png" },
-            { name: "Tunisia", flag: "🇹🇳", flagUrl: "https://flagcdn.com/w40/tn.png" },
-            { name: "Turkey", flag: "🇹🇷", flagUrl: "https://flagcdn.com/w40/tr.png" },
-            { name: "Turkmenistan", flag: "🇹🇲", flagUrl: "https://flagcdn.com/w40/tm.png" },
-            { name: "Tuvalu", flag: "🇹🇻", flagUrl: "https://flagcdn.com/w40/tv.png" },
-            { name: "Uganda", flag: "🇺🇬", flagUrl: "https://flagcdn.com/w40/ug.png" },
-            { name: "Ukraine", flag: "🇺🇦", flagUrl: "https://flagcdn.com/w40/ua.png" },
-            { name: "United Arab Emirates", flag: "🇦🇪", flagUrl: "https://flagcdn.com/w40/ae.png" },
-            { name: "United Kingdom", flag: "🇬🇧", flagUrl: "https://flagcdn.com/w40/gb.png" },
-            { name: "United States", flag: "🇺🇸", flagUrl: "https://flagcdn.com/w40/us.png" },
-            { name: "Uruguay", flag: "🇺🇾", flagUrl: "https://flagcdn.com/w40/uy.png" },
-            { name: "Uzbekistan", flag: "🇺🇿", flagUrl: "https://flagcdn.com/w40/uz.png" },
-            { name: "Vanuatu", flag: "🇻🇺", flagUrl: "https://flagcdn.com/w40/vu.png" },
-            { name: "Venezuela", flag: "🇻🇪", flagUrl: "https://flagcdn.com/w40/ve.png" },
-            { name: "Vietnam", flag: "🇻🇳", flagUrl: "https://flagcdn.com/w40/vn.png" },
-            { name: "Yemen", flag: "🇾🇪", flagUrl: "https://flagcdn.com/w40/ye.png" },
-            { name: "Zambia", flag: "🇿🇲", flagUrl: "https://flagcdn.com/w40/zm.png" },
-            { name: "Zimbabwe", flag: "🇿🇼", flagUrl: "https://flagcdn.com/w40/zw.png" },
-            { name: "Holy See", flag: "🇻🇦", flagUrl: "https://flagcdn.com/w40/va.png" },
-            { name: "State of Palestine", flag: "🇵🇸", flagUrl: "https://flagcdn.com/w40/ps.png" }
+            { name: "Afghanistan", flag: "🇦🇫", flagUrl: "https://flagcdn.com/af.svg" },
+            { name: "Albania", flag: "🇦🇱", flagUrl: "https://flagcdn.com/al.svg" },
+            { name: "Algeria", flag: "🇩🇿", flagUrl: "https://flagcdn.com/dz.svg" },
+            { name: "Andorra", flag: "🇦🇩", flagUrl: "https://flagcdn.com/ad.svg" },
+            { name: "Angola", flag: "🇦🇴", flagUrl: "https://flagcdn.com/ao.svg" },
+            { name: "Antigua and Barbuda", flag: "🇦🇬", flagUrl: "https://flagcdn.com/ag.svg" },
+            { name: "Argentina", flag: "🇦🇷", flagUrl: "https://flagcdn.com/ar.svg" },
+            { name: "Armenia", flag: "🇦🇲", flagUrl: "https://flagcdn.com/am.svg" },
+            { name: "Australia", flag: "🇦🇺", flagUrl: "https://flagcdn.com/au.svg" },
+            { name: "Austria", flag: "🇦🇹", flagUrl: "https://flagcdn.com/at.svg" },
+            { name: "Azerbaijan", flag: "🇦🇿", flagUrl: "https://flagcdn.com/az.svg" },
+            { name: "Bahamas", flag: "🇧🇸", flagUrl: "https://flagcdn.com/bs.svg" },
+            { name: "Bahrain", flag: "🇧🇭", flagUrl: "https://flagcdn.com/bh.svg" },
+            { name: "Bangladesh", flag: "🇧🇩", flagUrl: "https://flagcdn.com/bd.svg" },
+            { name: "Barbados", flag: "🇧🇧", flagUrl: "https://flagcdn.com/bb.svg" },
+            { name: "Belarus", flag: "🇧🇾", flagUrl: "https://flagcdn.com/by.svg" },
+            { name: "Belgium", flag: "🇧🇪", flagUrl: "https://flagcdn.com/be.svg" },
+            { name: "Belize", flag: "🇧🇿", flagUrl: "https://flagcdn.com/bz.svg" },
+            { name: "Benin", flag: "🇧🇯", flagUrl: "https://flagcdn.com/bj.svg" },
+            { name: "Bhutan", flag: "🇧🇹", flagUrl: "https://flagcdn.com/bt.svg" },
+            { name: "Bolivia", flag: "🇧🇴", flagUrl: "https://flagcdn.com/bo.svg" },
+            { name: "Bosnia and Herzegovina", flag: "🇧🇦", flagUrl: "https://flagcdn.com/ba.svg" },
+            { name: "Botswana", flag: "🇧🇼", flagUrl: "https://flagcdn.com/bw.svg" },
+            { name: "Brazil", flag: "🇧🇷", flagUrl: "https://flagcdn.com/br.svg" },
+            { name: "Brunei", flag: "🇧🇳", flagUrl: "https://flagcdn.com/bn.svg" },
+            { name: "Bulgaria", flag: "🇧🇬", flagUrl: "https://flagcdn.com/bg.svg" },
+            { name: "Burkina Faso", flag: "🇧🇫", flagUrl: "https://flagcdn.com/bf.svg" },
+            { name: "Burundi", flag: "🇧🇮", flagUrl: "https://flagcdn.com/bi.svg" },
+            { name: "Cabo Verde", flag: "🇨🇻", flagUrl: "https://flagcdn.com/cv.svg" },
+            { name: "Cambodia", flag: "🇰🇭", flagUrl: "https://flagcdn.com/kh.svg" },
+            { name: "Cameroon", flag: "🇨🇲", flagUrl: "https://flagcdn.com/cm.svg" },
+            { name: "Canada", flag: "🇨🇦", flagUrl: "https://flagcdn.com/ca.svg" },
+            { name: "Central African Republic", flag: "🇨🇫", flagUrl: "https://flagcdn.com/cf.svg" },
+            { name: "Chad", flag: "🇹🇩", flagUrl: "https://flagcdn.com/td.svg" },
+            { name: "Chile", flag: "🇨🇱", flagUrl: "https://flagcdn.com/cl.svg" },
+            { name: "China", flag: "🇨🇳", flagUrl: "https://flagcdn.com/cn.svg" },
+            { name: "Colombia", flag: "🇨🇴", flagUrl: "https://flagcdn.com/co.svg" },
+            { name: "Comoros", flag: "🇰🇲", flagUrl: "https://flagcdn.com/km.svg" },
+            { name: "Congo", flag: "🇨🇬", flagUrl: "https://flagcdn.com/cg.svg" },
+            { name: "Costa Rica", flag: "🇨🇷", flagUrl: "https://flagcdn.com/cr.svg" },
+            { name: "Côte d'Ivoire", flag: "🇨🇮", flagUrl: "https://flagcdn.com/ci.svg" },
+            { name: "Croatia", flag: "🇭🇷", flagUrl: "https://flagcdn.com/hr.svg" },
+            { name: "Cuba", flag: "🇨🇺", flagUrl: "https://flagcdn.com/cu.svg" },
+            { name: "Cyprus", flag: "🇨🇾", flagUrl: "https://flagcdn.com/cy.svg" },
+            { name: "Czech Republic", flag: "🇨🇿", flagUrl: "https://flagcdn.com/cz.svg" },
+            { name: "Democratic Republic of the Congo", flag: "🇨🇩", flagUrl: "https://flagcdn.com/cd.svg" },
+            { name: "Denmark", flag: "🇩🇰", flagUrl: "https://flagcdn.com/dk.svg" },
+            { name: "Djibouti", flag: "🇩🇯", flagUrl: "https://flagcdn.com/dj.svg" },
+            { name: "Dominica", flag: "🇩🇲", flagUrl: "https://flagcdn.com/dm.svg" },
+            { name: "Dominican Republic", flag: "🇩🇴", flagUrl: "https://flagcdn.com/do.svg" },
+            { name: "Ecuador", flag: "🇪🇨", flagUrl: "https://flagcdn.com/ec.svg" },
+            { name: "Egypt", flag: "🇪🇬", flagUrl: "https://flagcdn.com/eg.svg" },
+            { name: "El Salvador", flag: "🇸🇻", flagUrl: "https://flagcdn.com/sv.svg" },
+            { name: "Equatorial Guinea", flag: "🇬🇶", flagUrl: "https://flagcdn.com/gq.svg" },
+            { name: "Eritrea", flag: "🇪🇷", flagUrl: "https://flagcdn.com/er.svg" },
+            { name: "Estonia", flag: "🇪🇪", flagUrl: "https://flagcdn.com/ee.svg" },
+            { name: "Eswatini", flag: "🇸🇿", flagUrl: "https://flagcdn.com/sz.svg" },
+            { name: "Ethiopia", flag: "🇪🇹", flagUrl: "https://flagcdn.com/et.svg" },
+            { name: "Fiji", flag: "🇫🇯", flagUrl: "https://flagcdn.com/fj.svg" },
+            { name: "Finland", flag: "🇫🇮", flagUrl: "https://flagcdn.com/fi.svg" },
+            { name: "France", flag: "🇫🇷", flagUrl: "https://flagcdn.com/fr.svg" },
+            { name: "Gabon", flag: "🇬🇦", flagUrl: "https://flagcdn.com/ga.svg" },
+            { name: "Gambia", flag: "🇬🇲", flagUrl: "https://flagcdn.com/gm.svg" },
+            { name: "Georgia", flag: "🇬🇪", flagUrl: "https://flagcdn.com/ge.svg" },
+            { name: "Germany", flag: "🇩🇪", flagUrl: "https://flagcdn.com/de.svg" },
+            { name: "Ghana", flag: "🇬🇭", flagUrl: "https://flagcdn.com/gh.svg" },
+            { name: "Greece", flag: "🇬🇷", flagUrl: "https://flagcdn.com/gr.svg" },
+            { name: "Grenada", flag: "🇬🇩", flagUrl: "https://flagcdn.com/gd.svg" },
+            { name: "Guatemala", flag: "🇬🇹", flagUrl: "https://flagcdn.com/gt.svg" },
+            { name: "Guinea", flag: "🇬🇳", flagUrl: "https://flagcdn.com/gn.svg" },
+            { name: "Guinea-Bissau", flag: "🇬🇼", flagUrl: "https://flagcdn.com/gw.svg" },
+            { name: "Guyana", flag: "🇬🇾", flagUrl: "https://flagcdn.com/gy.svg" },
+            { name: "Haiti", flag: "🇭🇹", flagUrl: "https://flagcdn.com/ht.svg" },
+            { name: "Honduras", flag: "🇭🇳", flagUrl: "https://flagcdn.com/hn.svg" },
+            { name: "Hungary", flag: "🇭🇺", flagUrl: "https://flagcdn.com/hu.svg" },
+            { name: "Iceland", flag: "🇮🇸", flagUrl: "https://flagcdn.com/is.svg" },
+            { name: "India", flag: "🇮🇳", flagUrl: "https://flagcdn.com/in.svg" },
+            { name: "Indonesia", flag: "🇮🇩", flagUrl: "https://flagcdn.com/id.svg" },
+            { name: "Iran", flag: "🇮🇷", flagUrl: "https://flagcdn.com/ir.svg" },
+            { name: "Iraq", flag: "🇮🇶", flagUrl: "https://flagcdn.com/iq.svg" },
+            { name: "Ireland", flag: "🇮🇪", flagUrl: "https://flagcdn.com/ie.svg" },
+            { name: "Israel", flag: "🇮🇱", flagUrl: "https://flagcdn.com/il.svg" },
+            { name: "Italy", flag: "🇮🇹", flagUrl: "https://flagcdn.com/it.svg" },
+            { name: "Jamaica", flag: "🇯🇲", flagUrl: "https://flagcdn.com/jm.svg" },
+            { name: "Japan", flag: "🇯🇵", flagUrl: "https://flagcdn.com/jp.svg" },
+            { name: "Jordan", flag: "🇯🇴", flagUrl: "https://flagcdn.com/jo.svg" },
+            { name: "Kazakhstan", flag: "🇰🇿", flagUrl: "https://flagcdn.com/kz.svg" },
+            { name: "Kenya", flag: "🇰🇪", flagUrl: "https://flagcdn.com/ke.svg" },
+            { name: "Kiribati", flag: "🇰🇮", flagUrl: "https://flagcdn.com/ki.svg" },
+            { name: "Kuwait", flag: "🇰🇼", flagUrl: "https://flagcdn.com/kw.svg" },
+            { name: "Kyrgyzstan", flag: "🇰🇬", flagUrl: "https://flagcdn.com/kg.svg" },
+            { name: "Laos", flag: "🇱🇦", flagUrl: "https://flagcdn.com/la.svg" },
+            { name: "Latvia", flag: "🇱🇻", flagUrl: "https://flagcdn.com/lv.svg" },
+            { name: "Lebanon", flag: "🇱🇧", flagUrl: "https://flagcdn.com/lb.svg" },
+            { name: "Lesotho", flag: "🇱🇸", flagUrl: "https://flagcdn.com/ls.svg" },
+            { name: "Liberia", flag: "🇱🇷", flagUrl: "https://flagcdn.com/lr.svg" },
+            { name: "Libya", flag: "🇱🇾", flagUrl: "https://flagcdn.com/ly.svg" },
+            { name: "Liechtenstein", flag: "🇱🇮", flagUrl: "https://flagcdn.com/li.svg" },
+            { name: "Lithuania", flag: "🇱🇹", flagUrl: "https://flagcdn.com/lt.svg" },
+            { name: "Luxembourg", flag: "🇱🇺", flagUrl: "https://flagcdn.com/lu.svg" },
+            { name: "Madagascar", flag: "🇲🇬", flagUrl: "https://flagcdn.com/mg.svg" },
+            { name: "Malawi", flag: "🇲🇼", flagUrl: "https://flagcdn.com/mw.svg" },
+            { name: "Malaysia", flag: "🇲🇾", flagUrl: "https://flagcdn.com/my.svg" },
+            { name: "Maldives", flag: "🇲🇻", flagUrl: "https://flagcdn.com/mv.svg" },
+            { name: "Mali", flag: "🇲🇱", flagUrl: "https://flagcdn.com/ml.svg" },
+            { name: "Malta", flag: "🇲🇹", flagUrl: "https://flagcdn.com/mt.svg" },
+            { name: "Marshall Islands", flag: "🇲🇭", flagUrl: "https://flagcdn.com/mh.svg" },
+            { name: "Mauritania", flag: "🇲🇷", flagUrl: "https://flagcdn.com/mr.svg" },
+            { name: "Mauritius", flag: "🇲🇺", flagUrl: "https://flagcdn.com/mu.svg" },
+            { name: "Mexico", flag: "🇲🇽", flagUrl: "https://flagcdn.com/mx.svg" },
+            { name: "Micronesia", flag: "🇫🇲", flagUrl: "https://flagcdn.com/fm.svg" },
+            { name: "Moldova", flag: "🇲🇩", flagUrl: "https://flagcdn.com/md.svg" },
+            { name: "Monaco", flag: "🇲🇨", flagUrl: "https://flagcdn.com/mc.svg" },
+            { name: "Mongolia", flag: "🇲🇳", flagUrl: "https://flagcdn.com/mn.svg" },
+            { name: "Montenegro", flag: "🇲🇪", flagUrl: "https://flagcdn.com/me.svg" },
+            { name: "Morocco", flag: "🇲🇦", flagUrl: "https://flagcdn.com/ma.svg" },
+            { name: "Mozambique", flag: "🇲🇿", flagUrl: "https://flagcdn.com/mz.svg" },
+            { name: "Myanmar", flag: "🇲🇲", flagUrl: "https://flagcdn.com/mm.svg" },
+            { name: "Namibia", flag: "🇳🇦", flagUrl: "https://flagcdn.com/na.svg" },
+            { name: "Nauru", flag: "🇳🇷", flagUrl: "https://flagcdn.com/nr.svg" },
+            { name: "Nepal", flag: "🇳🇵", flagUrl: "https://flagcdn.com/np.svg" },
+            { name: "Netherlands", flag: "🇳🇱", flagUrl: "https://flagcdn.com/nl.svg" },
+            { name: "New Zealand", flag: "🇳🇿", flagUrl: "https://flagcdn.com/nz.svg" },
+            { name: "Nicaragua", flag: "🇳🇮", flagUrl: "https://flagcdn.com/ni.svg" },
+            { name: "Niger", flag: "🇳🇪", flagUrl: "https://flagcdn.com/ne.svg" },
+            { name: "Nigeria", flag: "🇳🇬", flagUrl: "https://flagcdn.com/ng.svg" },
+            { name: "North Korea", flag: "🇰🇵", flagUrl: "https://flagcdn.com/kp.svg" },
+            { name: "North Macedonia", flag: "🇲🇰", flagUrl: "https://flagcdn.com/mk.svg" },
+            { name: "Norway", flag: "🇳🇴", flagUrl: "https://flagcdn.com/no.svg" },
+            { name: "Oman", flag: "🇴🇲", flagUrl: "https://flagcdn.com/om.svg" },
+            { name: "Pakistan", flag: "🇵🇰", flagUrl: "https://flagcdn.com/pk.svg" },
+            { name: "Palau", flag: "🇵🇼", flagUrl: "https://flagcdn.com/pw.svg" },
+            { name: "Panama", flag: "🇵🇦", flagUrl: "https://flagcdn.com/pa.svg" },
+            { name: "Papua New Guinea", flag: "🇵🇬", flagUrl: "https://flagcdn.com/pg.svg" },
+            { name: "Paraguay", flag: "🇵🇾", flagUrl: "https://flagcdn.com/py.svg" },
+            { name: "Peru", flag: "🇵🇪", flagUrl: "https://flagcdn.com/pe.svg" },
+            { name: "Philippines", flag: "🇵🇭", flagUrl: "https://flagcdn.com/ph.svg" },
+            { name: "Poland", flag: "🇵🇱", flagUrl: "https://flagcdn.com/pl.svg" },
+            { name: "Portugal", flag: "🇵🇹", flagUrl: "https://flagcdn.com/pt.svg" },
+            { name: "Qatar", flag: "🇶🇦", flagUrl: "https://flagcdn.com/qa.svg" },
+            { name: "Romania", flag: "🇷🇴", flagUrl: "https://flagcdn.com/ro.svg" },
+            { name: "Russia", flag: "🇷🇺", flagUrl: "https://flagcdn.com/ru.svg" },
+            { name: "Rwanda", flag: "🇷🇼", flagUrl: "https://flagcdn.com/rw.svg" },
+            { name: "Saint Kitts and Nevis", flag: "🇰🇳", flagUrl: "https://flagcdn.com/kn.svg" },
+            { name: "Saint Lucia", flag: "🇱🇨", flagUrl: "https://flagcdn.com/lc.svg" },
+            { name: "Saint Vincent and the Grenadines", flag: "🇻🇨", flagUrl: "https://flagcdn.com/vc.svg" },
+            { name: "Samoa", flag: "🇼🇸", flagUrl: "https://flagcdn.com/ws.svg" },
+            { name: "San Marino", flag: "🇸🇲", flagUrl: "https://flagcdn.com/sm.svg" },
+            { name: "São Tomé and Príncipe", flag: "🇸🇹", flagUrl: "https://flagcdn.com/st.svg" },
+            { name: "Saudi Arabia", flag: "🇸🇦", flagUrl: "https://flagcdn.com/sa.svg" },
+            { name: "Senegal", flag: "🇸🇳", flagUrl: "https://flagcdn.com/sn.svg" },
+            { name: "Serbia", flag: "🇷🇸", flagUrl: "https://flagcdn.com/rs.svg" },
+            { name: "Seychelles", flag: "🇸🇨", flagUrl: "https://flagcdn.com/sc.svg" },
+            { name: "Sierra Leone", flag: "🇸🇱", flagUrl: "https://flagcdn.com/sl.svg" },
+            { name: "Singapore", flag: "🇸🇬", flagUrl: "https://flagcdn.com/sg.svg" },
+            { name: "Slovakia", flag: "🇸🇰", flagUrl: "https://flagcdn.com/sk.svg" },
+            { name: "Slovenia", flag: "🇸🇮", flagUrl: "https://flagcdn.com/si.svg" },
+            { name: "Solomon Islands", flag: "🇸🇧", flagUrl: "https://flagcdn.com/sb.svg" },
+            { name: "Somalia", flag: "🇸🇴", flagUrl: "https://flagcdn.com/so.svg" },
+            { name: "South Africa", flag: "🇿🇦", flagUrl: "https://flagcdn.com/za.svg" },
+            { name: "South Korea", flag: "🇰🇷", flagUrl: "https://flagcdn.com/kr.svg" },
+            { name: "South Sudan", flag: "🇸🇸", flagUrl: "https://flagcdn.com/ss.svg" },
+            { name: "Spain", flag: "🇪🇸", flagUrl: "https://flagcdn.com/es.svg" },
+            { name: "Sri Lanka", flag: "🇱🇰", flagUrl: "https://flagcdn.com/lk.svg" },
+            { name: "Sudan", flag: "🇸🇩", flagUrl: "https://flagcdn.com/sd.svg" },
+            { name: "Suriname", flag: "🇸🇷", flagUrl: "https://flagcdn.com/sr.svg" },
+            { name: "Sweden", flag: "🇸🇪", flagUrl: "https://flagcdn.com/se.svg" },
+            { name: "Switzerland", flag: "🇨🇭", flagUrl: "https://flagcdn.com/ch.svg" },
+            { name: "Syria", flag: "🇸🇾", flagUrl: "https://flagcdn.com/sy.svg" },
+            { name: "Tajikistan", flag: "🇹🇯", flagUrl: "https://flagcdn.com/tj.svg" },
+            { name: "Tanzania", flag: "🇹🇿", flagUrl: "https://flagcdn.com/tz.svg" },
+            { name: "Thailand", flag: "🇹🇭", flagUrl: "https://flagcdn.com/th.svg" },
+            { name: "Timor-Leste", flag: "🇹🇱", flagUrl: "https://flagcdn.com/tl.svg" },
+            { name: "Togo", flag: "🇹🇬", flagUrl: "https://flagcdn.com/tg.svg" },
+            { name: "Tonga", flag: "🇹🇴", flagUrl: "https://flagcdn.com/to.svg" },
+            { name: "Trinidad and Tobago", flag: "🇹🇹", flagUrl: "https://flagcdn.com/tt.svg" },
+            { name: "Tunisia", flag: "🇹🇳", flagUrl: "https://flagcdn.com/tn.svg" },
+            { name: "Turkey", flag: "🇹🇷", flagUrl: "https://flagcdn.com/tr.svg" },
+            { name: "Turkmenistan", flag: "🇹🇲", flagUrl: "https://flagcdn.com/tm.svg" },
+            { name: "Tuvalu", flag: "🇹🇻", flagUrl: "https://flagcdn.com/tv.svg" },
+            { name: "Uganda", flag: "🇺🇬", flagUrl: "https://flagcdn.com/ug.svg" },
+            { name: "Ukraine", flag: "🇺🇦", flagUrl: "https://flagcdn.com/ua.svg" },
+            { name: "United Arab Emirates", flag: "🇦🇪", flagUrl: "https://flagcdn.com/ae.svg" },
+            { name: "United Kingdom", flag: "🇬🇧", flagUrl: "https://flagcdn.com/gb.svg" },
+            { name: "United States", flag: "🇺🇸", flagUrl: "https://flagcdn.com/us.svg" },
+            { name: "Uruguay", flag: "🇺🇾", flagUrl: "https://flagcdn.com/uy.svg" },
+            { name: "Uzbekistan", flag: "🇺🇿", flagUrl: "https://flagcdn.com/uz.svg" },
+            { name: "Vanuatu", flag: "🇻🇺", flagUrl: "https://flagcdn.com/vu.svg" },
+            { name: "Venezuela", flag: "🇻🇪", flagUrl: "https://flagcdn.com/ve.svg" },
+            { name: "Vietnam", flag: "🇻🇳", flagUrl: "https://flagcdn.com/vn.svg" },
+            { name: "Yemen", flag: "🇾🇪", flagUrl: "https://flagcdn.com/ye.svg" },
+            { name: "Zambia", flag: "🇿🇲", flagUrl: "https://flagcdn.com/zm.svg" },
+            { name: "Zimbabwe", flag: "🇿🇼", flagUrl: "https://flagcdn.com/zw.svg" },
+            { name: "Holy See", flag: "🇻🇦", flagUrl: "https://flagcdn.com/va.svg" },
+            { name: "State of Palestine", flag: "🇵🇸", flagUrl: "https://flagcdn.com/ps.svg" }
         ];
+
+        // ==========================================
+        // SMART FLAG LOOKUP FUNCTION - FIXED
+        // ==========================================
+        function getFlagUrl(countryName) {
+            if (!countryName) return null;
+            
+            // First try exact match
+            let country = countries.find(c => c.name === countryName);
+            if (country) return country.flagUrl;
+            
+            // Then try contains match (for "Lithuania (Seasonal Employment)", "Czech Republic (Seasonal)", etc.)
+            country = countries.find(c => countryName.toLowerCase().includes(c.name.toLowerCase()));
+            if (country) return country.flagUrl;
+            
+            // Then try reverse contains
+            country = countries.find(c => c.name.toLowerCase().includes(countryName.toLowerCase()));
+            if (country) return country.flagUrl;
+            
+            return null;
+        }
+
+        function getFlagHtml(countryName, flagEmoji) {
+            const flagUrl = getFlagUrl(countryName);
+            if (flagUrl) {
+                return `<img src="${flagUrl}" alt="${countryName} flag" class="flag-image" style="width:24px;height:16px;object-fit:cover;border-radius:2px;border:1px solid #ddd;flex-shrink:0;" onerror="this.style.display='none';this.parentElement.innerHTML='<span class=\\'flag-fallback\\'>${flagEmoji || '🌍'}</span>'">`;
+            }
+            return `<span class="flag-fallback">${flagEmoji || '🌍'}</span>`;
+        }
 
         // ==========================================
         // COUNTRY AUTOCOMPLETE
@@ -1756,7 +2218,7 @@
             }
             countrySuggestions.innerHTML = filtered.map(c => `
                 <div class="suggestion-item" data-name="${c.name}" data-flag="${c.flag}" data-flag-url="${c.flagUrl}">
-                    <img src="${c.flagUrl}" alt="${c.name} flag" class="flag-image">
+                    <img src="${c.flagUrl}" alt="${c.name} flag" class="flag-image" style="width:24px;height:16px;object-fit:cover;border-radius:2px;border:1px solid var(--border);flex-shrink:0;" onerror="this.style.display='none'">
                     ${c.name}
                 </div>
             `).join('');
@@ -1783,18 +2245,24 @@
 
         function renderFlagPreview(name, flag, flagUrl) {
             const existing = imagePreview.querySelector('.flag-row');
-            const flagHtml = `
+            const flagHtml = flagUrl ? 
+                `<img src="${flagUrl}" alt="${name} flag" style="width:40px;height:26px;object-fit:cover;border-radius:4px;border:1px solid var(--border);" onerror="this.style.display='none';this.parentElement.innerHTML='<span style=\\'font-size:1.8rem;\\'>${flag || '🌍'}</span>'">` :
+                `<span style="font-size:1.8rem;">${flag || '🌍'}</span>`;
+            
+            const html = `
                 <div class="flag-row" style="display:flex; align-items:center; gap:12px; padding:8px; background:var(--bg-body); border-radius:8px; border:1px solid var(--border); margin-bottom:8px;">
-                    <img src="${flagUrl}" alt="${name} flag" style="width:40px; height:26px; object-fit:cover; border-radius:4px; border:1px solid var(--border);">
+                    <div style="width:40px;height:26px;display:flex;align-items:center;justify-content:center;border-radius:4px;border:1px solid var(--border);background:#fff;overflow:hidden;">
+                        ${flagHtml}
+                    </div>
                     <div>
                         <div style="font-weight:600;">${name}</div>
                         <div style="font-size:0.8rem; color:var(--text-secondary);">Flag will be used as default image</div>
                     </div>
                 </div>`;
             if (existing) {
-                existing.outerHTML = flagHtml;
+                existing.outerHTML = html;
             } else {
-                imagePreview.insertAdjacentHTML('afterbegin', flagHtml);
+                imagePreview.insertAdjacentHTML('afterbegin', html);
             }
         }
 
@@ -1803,11 +2271,502 @@
         // ==========================================
         visaTypeInput.addEventListener('change', function () {
             otherVisaGroup.style.display = this.value === 'Other' ? 'block' : 'none';
+            // Show/hide Jobs tab
+            const jobsTabBtn = document.getElementById('jobsTabBtn');
+            if (this.value === 'Work Visa') {
+                jobsTabBtn.style.display = 'block';
+                nextToJobsBtn.style.display = 'block';
+            } else {
+                jobsTabBtn.style.display = 'none';
+                nextToJobsBtn.style.display = 'none';
+                // Hide jobs container if not work visa
+                jobsContainer.style.display = 'none';
+                jobsAvailableToggle.checked = false;
+            }
         });
 
         durationInput.addEventListener('change', function () {
             otherDurationGroup.style.display = this.value === 'Other' ? 'block' : 'none';
         });
+
+        // ==========================================
+        // JOBS AVAILABLE TOGGLE
+        // ==========================================
+        jobsAvailableToggle.addEventListener('change', function () {
+            jobsContainer.style.display = this.checked ? 'block' : 'none';
+        });
+
+        // ==========================================
+        // TAB VALIDATION
+        // ==========================================
+        function validateTab(tabId) {
+            const errors = [];
+            
+            // Clear previous error styling
+            document.querySelectorAll('.form-group input.error, .form-group select.error, .form-group textarea.error').forEach(el => {
+                el.classList.remove('error');
+            });
+            
+            if (tabId === 'tab1') {
+                // Basic Info validation
+                const country = document.getElementById('countryInput').value.trim();
+                const visaType = document.getElementById('visaTypeInput').value;
+                const duration = document.getElementById('durationInput').value;
+                
+                if (!country) {
+                    errors.push('Country Name is required.');
+                    document.getElementById('countryInput').classList.add('error');
+                }
+                
+                if (!visaType) {
+                    errors.push('Visa Type is required.');
+                    document.getElementById('visaTypeInput').classList.add('error');
+                }
+                
+                if (!duration) {
+                    errors.push('Processing Duration is required.');
+                    document.getElementById('durationInput').classList.add('error');
+                }
+                
+                if (visaType === 'Other') {
+                    const customVisa = document.getElementById('otherVisaInput').value.trim();
+                    if (!customVisa) {
+                        errors.push('Please specify the visa type.');
+                        document.getElementById('otherVisaInput').classList.add('error');
+                    }
+                }
+                
+                if (duration === 'Other') {
+                    const customDuration = document.getElementById('otherDurationInput').value.trim();
+                    if (!customDuration) {
+                        errors.push('Please specify the duration.');
+                        document.getElementById('otherDurationInput').classList.add('error');
+                    }
+                }
+            }
+            
+            if (tabId === 'tab2') {
+                // Pricing & Eligibility validation
+                const programCost = document.getElementById('programCostInput').value.trim();
+                const advance = document.getElementById('advanceInput').value.trim();
+                const afterReadiness = document.getElementById('afterReadinessInput').value.trim();
+                const allowedCountries = getListValues(document.getElementById('allowedCountriesContainer'), 'allowed-country-input');
+                
+                if (!programCost) {
+                    errors.push('Program Cost is required.');
+                    document.getElementById('programCostInput').classList.add('error');
+                }
+                
+                if (!advance) {
+                    errors.push('Advance Payment is required.');
+                    document.getElementById('advanceInput').classList.add('error');
+                }
+                
+                if (!afterReadiness) {
+                    errors.push('Balance (After Readiness) is required.');
+                    document.getElementById('afterReadinessInput').classList.add('error');
+                }
+                
+                if (allowedCountries.length === 0) {
+                    errors.push('Please add at least one allowed country.');
+                }
+            }
+            
+            if (tabId === 'tab3') {
+                // Requirements & Info validation
+                const documentsNeeded = getListValues(document.getElementById('documentsNeededContainer'), 'document-needed-input');
+                const documentsProvided = getListValues(document.getElementById('documentsProvidedContainer'), 'document-provided-input');
+                
+                if (documentsNeeded.length === 0) {
+                    errors.push('Please add at least one required document.');
+                }
+                
+                if (documentsProvided.length === 0) {
+                    errors.push('Please add at least one item in What We Provide.');
+                }
+            }
+            
+            return errors;
+        }
+
+        // ==========================================
+        // TAB NAVIGATION
+        // ==========================================
+        const allTabBtns = document.querySelectorAll('.tab-btn');
+        const allTabContents = document.querySelectorAll('.tab-content');
+
+        // Hide Jobs tab by default
+        document.getElementById('jobsTabBtn').style.display = 'none';
+        nextToJobsBtn.style.display = 'none';
+
+        function switchTab(tabId) {
+            // Remove active from all
+            allTabBtns.forEach(b => b.classList.remove('active'));
+            allTabContents.forEach(c => c.classList.remove('active'));
+
+            // Activate target
+            const targetBtn = document.querySelector(`.tab-btn[data-tab="${tabId}"]`);
+            const targetContent = document.getElementById(tabId);
+            if (targetBtn && targetContent) {
+                targetBtn.classList.add('active');
+                targetContent.classList.add('active');
+            }
+            
+            // Scroll to top of form
+            document.querySelector('.form-container').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        // Tab click handlers
+        allTabBtns.forEach(btn => {
+            btn.addEventListener('click', function () {
+                switchTab(this.dataset.tab);
+            });
+        });
+
+        // Next buttons with validation
+        btnNext.forEach(btn => {
+            btn.addEventListener('click', function () {
+                const nextTab = this.dataset.next;
+                const currentTab = this.closest('.tab-content').id;
+                
+                // Validate current tab
+                const errors = validateTab(currentTab);
+                
+                if (errors.length > 0) {
+                    // Show all errors
+                    const errorMessage = errors.join('\n• ');
+                    showToast(`Please fix the following errors:\n• ${errorMessage}`, true);
+                    
+                    // Scroll to the first error field
+                    const firstErrorField = document.querySelector('.form-group input.error, .form-group select.error, .form-group textarea.error');
+                    if (firstErrorField) {
+                        firstErrorField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        firstErrorField.focus();
+                    }
+                    return;
+                }
+                
+                if (nextTab) {
+                    switchTab(nextTab);
+                }
+            });
+        });
+
+        // Previous buttons
+        btnPrev.forEach(btn => {
+            btn.addEventListener('click', function () {
+                const prevTab = this.dataset.prev;
+                if (prevTab) {
+                    switchTab(prevTab);
+                }
+            });
+        });
+
+        // ==========================================
+        // ALLOWED COUNTRIES SUGGESTIONS
+        // ==========================================
+        document.addEventListener('input', function (e) {
+            const input = e.target.closest('.allowed-country-input');
+            if (!input) return;
+
+            const wrapper = input.closest('.allowed-country-wrapper');
+            const suggestions = wrapper.querySelector('.allowed-country-suggestions');
+
+            const query = input.value.toLowerCase().trim();
+            if (query.length === 0) {
+                suggestions.classList.remove('active');
+                return;
+            }
+
+            const filtered = countries.filter(c => c.name.toLowerCase().includes(query));
+            if (filtered.length === 0) {
+                suggestions.classList.remove('active');
+                return;
+            }
+
+            suggestions.innerHTML = filtered.map(c => `
+                <div class="suggestion-item" data-name="${c.name}" data-flag="${c.flag}" data-flag-url="${c.flagUrl}">
+                    <img src="${c.flagUrl}" alt="${c.name} flag" class="flag-image" style="width:20px;height:14px;object-fit:cover;border-radius:2px;border:1px solid var(--border);flex-shrink:0;" onerror="this.style.display='none'">
+                    ${c.name}
+                </div>
+            `).join('');
+            suggestions.classList.add('active');
+
+            suggestions.querySelectorAll('.suggestion-item').forEach(item => {
+                item.addEventListener('click', function () {
+                    input.value = this.dataset.name;
+                    suggestions.classList.remove('active');
+                });
+            });
+        });
+
+        document.addEventListener('click', function (e) {
+            if (!e.target.closest('.allowed-country-wrapper')) {
+                document.querySelectorAll('.allowed-country-suggestions').forEach(el => {
+                    el.classList.remove('active');
+                });
+            }
+        });
+
+        // ==========================================
+        // DYNAMIC LIST HELPERS
+        // ==========================================
+        function addListItem(container, inputClass, placeholder) {
+            const listItem = document.createElement('div');
+            listItem.className = 'list-item';
+
+            const wrapper = document.createElement('div');
+            wrapper.className = 'allowed-country-wrapper';
+            wrapper.style.width = '100%';
+
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = inputClass;
+            input.placeholder = placeholder;
+            input.autocomplete = 'off';
+
+            const suggestions = document.createElement('div');
+            suggestions.className = 'allowed-country-suggestions';
+
+            wrapper.appendChild(input);
+            wrapper.appendChild(suggestions);
+            listItem.appendChild(wrapper);
+
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.className = 'remove-item';
+            removeBtn.innerHTML = '<i class="fas fa-times"></i>';
+            removeBtn.style.display = 'none';
+            removeBtn.addEventListener('click', function () {
+                listItem.remove();
+                updateRemoveButtons(container);
+            });
+
+            listItem.appendChild(removeBtn);
+            container.appendChild(listItem);
+
+            updateRemoveButtons(container);
+        }
+
+        function updateRemoveButtons(container) {
+            const items = container.querySelectorAll('.list-item');
+            items.forEach((item, index) => {
+                const btn = item.querySelector('.remove-item');
+                if (items.length > 1) {
+                    btn.style.display = 'flex';
+                } else {
+                    btn.style.display = 'none';
+                }
+            });
+        }
+
+        function getListValues(container, inputClass) {
+            const values = [];
+            container.querySelectorAll(`.${inputClass}`).forEach(input => {
+                const val = input.value.trim();
+                if (val) values.push(val);
+            });
+            return values;
+        }
+
+        function setListValues(container, inputClass, values) {
+            container.innerHTML = '';
+            if (!values || values.length === 0) {
+                // Add one empty item
+                addListItem(container, inputClass, 'Enter value...');
+                return;
+            }
+            values.forEach(val => {
+                const listItem = document.createElement('div');
+                listItem.className = 'list-item';
+
+                const wrapper = document.createElement('div');
+                wrapper.className = 'allowed-country-wrapper';
+                wrapper.style.width = '100%';
+
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.className = inputClass;
+                input.value = val;
+                input.autocomplete = 'off';
+
+                const suggestions = document.createElement('div');
+                suggestions.className = 'allowed-country-suggestions';
+
+                wrapper.appendChild(input);
+                wrapper.appendChild(suggestions);
+                listItem.appendChild(wrapper);
+
+                const removeBtn = document.createElement('button');
+                removeBtn.type = 'button';
+                removeBtn.className = 'remove-item';
+                removeBtn.innerHTML = '<i class="fas fa-times"></i>';
+                removeBtn.addEventListener('click', function () {
+                    listItem.remove();
+                    updateRemoveButtons(container);
+                });
+
+                listItem.appendChild(removeBtn);
+                container.appendChild(listItem);
+            });
+            updateRemoveButtons(container);
+        }
+
+        // ==========================================
+        // ALLOWED COUNTRIES
+        // ==========================================
+        addAllowedCountryBtn.addEventListener('click', function () {
+            addListItem(allowedCountriesContainer, 'allowed-country-input', 'Enter country...');
+        });
+
+        // ==========================================
+        // DOCUMENTS NEEDED
+        // ==========================================
+        addDocumentNeededBtn.addEventListener('click', function () {
+            addListItem(documentsNeededContainer, 'document-needed-input', 'Enter document...');
+        });
+
+        // ==========================================
+        // DOCUMENTS PROVIDED
+        // ==========================================
+        addDocumentProvidedBtn.addEventListener('click', function () {
+            addListItem(documentsProvidedContainer, 'document-provided-input', 'Enter item...');
+        });
+
+        // ==========================================
+        // JOBS REPEATER
+        // ==========================================
+        addJobBtn.addEventListener('click', function () {
+            const jobItem = document.createElement('div');
+            jobItem.className = 'job-item';
+
+            const jobFields = document.createElement('div');
+            jobFields.className = 'job-fields';
+
+            const titleInput = document.createElement('input');
+            titleInput.type = 'text';
+            titleInput.className = 'job-title-input';
+            titleInput.placeholder = 'Job Title (e.g. Software Engineer)';
+
+            const salaryInput = document.createElement('input');
+            salaryInput.type = 'text';
+            salaryInput.className = 'job-salary-input';
+            salaryInput.placeholder = 'Salary (e.g. €500 - €800)';
+
+            jobFields.appendChild(titleInput);
+            jobFields.appendChild(salaryInput);
+
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.className = 'remove-job';
+            removeBtn.innerHTML = '<i class="fas fa-times"></i>';
+            removeBtn.addEventListener('click', function () {
+                jobItem.remove();
+                updateJobRemoveButtons();
+            });
+
+            jobItem.appendChild(jobFields);
+            jobItem.appendChild(removeBtn);
+            jobsRepeater.appendChild(jobItem);
+
+            updateJobRemoveButtons();
+        });
+
+        function updateJobRemoveButtons() {
+            const jobs = jobsRepeater.querySelectorAll('.job-item');
+            jobs.forEach((job, index) => {
+                const btn = job.querySelector('.remove-job');
+                if (jobs.length > 1) {
+                    btn.style.display = 'flex';
+                } else {
+                    btn.style.display = 'none';
+                }
+            });
+        }
+
+        function getJobs() {
+            const jobs = [];
+            const items = jobsRepeater.querySelectorAll('.job-item');
+            items.forEach(item => {
+                const title = item.querySelector('.job-title-input').value.trim();
+                const salary = item.querySelector('.job-salary-input').value.trim();
+                if (title || salary) {
+                    jobs.push({ title, salary });
+                }
+            });
+            return jobs;
+        }
+
+        function setJobs(jobsArray) {
+            jobsRepeater.innerHTML = '';
+            if (!jobsArray || jobsArray.length === 0) {
+                // Add one empty job
+                const jobItem = document.createElement('div');
+                jobItem.className = 'job-item';
+
+                const jobFields = document.createElement('div');
+                jobFields.className = 'job-fields';
+
+                const titleInput = document.createElement('input');
+                titleInput.type = 'text';
+                titleInput.className = 'job-title-input';
+                titleInput.placeholder = 'Job Title (e.g. Software Engineer)';
+
+                const salaryInput = document.createElement('input');
+                salaryInput.type = 'text';
+                salaryInput.className = 'job-salary-input';
+                salaryInput.placeholder = 'Salary (e.g. €500 - €800)';
+
+                jobFields.appendChild(titleInput);
+                jobFields.appendChild(salaryInput);
+
+                const removeBtn = document.createElement('button');
+                removeBtn.type = 'button';
+                removeBtn.className = 'remove-job';
+                removeBtn.innerHTML = '<i class="fas fa-times"></i>';
+                removeBtn.style.display = 'none';
+
+                jobItem.appendChild(jobFields);
+                jobItem.appendChild(removeBtn);
+                jobsRepeater.appendChild(jobItem);
+                return;
+            }
+
+            jobsArray.forEach(job => {
+                const jobItem = document.createElement('div');
+                jobItem.className = 'job-item';
+
+                const jobFields = document.createElement('div');
+                jobFields.className = 'job-fields';
+
+                const titleInput = document.createElement('input');
+                titleInput.type = 'text';
+                titleInput.className = 'job-title-input';
+                titleInput.value = job.title || '';
+
+                const salaryInput = document.createElement('input');
+                salaryInput.type = 'text';
+                salaryInput.className = 'job-salary-input';
+                salaryInput.value = job.salary || '';
+
+                jobFields.appendChild(titleInput);
+                jobFields.appendChild(salaryInput);
+
+                const removeBtn = document.createElement('button');
+                removeBtn.type = 'button';
+                removeBtn.className = 'remove-job';
+                removeBtn.innerHTML = '<i class="fas fa-times"></i>';
+                removeBtn.addEventListener('click', function () {
+                    jobItem.remove();
+                    updateJobRemoveButtons();
+                });
+
+                jobItem.appendChild(jobFields);
+                jobItem.appendChild(removeBtn);
+                jobsRepeater.appendChild(jobItem);
+            });
+            updateJobRemoveButtons();
+        }
 
         // ==========================================
         // IMAGE SELECTION
@@ -1888,15 +2847,12 @@
         }
 
         // ==========================================
-        // CANCEL BUTTON
+        // RESET FORM
         // ==========================================
-        cancelBtn.addEventListener('click', resetForm);
-
         function resetForm() {
             visaForm.reset();
             editId.value = '';
             formTitle.textContent = 'Add New Visa Country';
-            submitBtn.textContent = 'Save Visa';
             otherVisaGroup.style.display = 'none';
             otherDurationGroup.style.display = 'none';
             uploadedImageUrls = [];
@@ -1905,8 +2861,58 @@
             imagePreview.innerHTML = '';
             uploadStatus.innerHTML = '';
             selectedCountry = null;
-            submitBtn.disabled = false;
             successMessage.classList.remove('active');
+            
+            // Reset dynamic lists
+            allowedCountriesContainer.innerHTML = '';
+            addListItem(allowedCountriesContainer, 'allowed-country-input', 'Enter country...');
+            
+            documentsNeededContainer.innerHTML = '';
+            addListItem(documentsNeededContainer, 'document-needed-input', 'Enter document...');
+            
+            documentsProvidedContainer.innerHTML = '';
+            addListItem(documentsProvidedContainer, 'document-provided-input', 'Enter item...');
+            
+            jobsRepeater.innerHTML = '';
+            const jobItem = document.createElement('div');
+            jobItem.className = 'job-item';
+            const jobFields = document.createElement('div');
+            jobFields.className = 'job-fields';
+            const titleInput = document.createElement('input');
+            titleInput.type = 'text';
+            titleInput.className = 'job-title-input';
+            titleInput.placeholder = 'Job Title (e.g. Software Engineer)';
+            const salaryInput = document.createElement('input');
+            salaryInput.type = 'text';
+            salaryInput.className = 'job-salary-input';
+            salaryInput.placeholder = 'Salary (e.g. €500 - €800)';
+            jobFields.appendChild(titleInput);
+            jobFields.appendChild(salaryInput);
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.className = 'remove-job';
+            removeBtn.innerHTML = '<i class="fas fa-times"></i>';
+            removeBtn.style.display = 'none';
+            jobItem.appendChild(jobFields);
+            jobItem.appendChild(removeBtn);
+            jobsRepeater.appendChild(jobItem);
+            
+            jobsAvailableToggle.checked = false;
+            jobsContainer.style.display = 'none';
+            
+            // Reset tabs to first tab
+            allTabBtns.forEach(b => b.classList.remove('active'));
+            allTabContents.forEach(c => c.classList.remove('active'));
+            document.querySelector('.tab-btn[data-tab="tab1"]').classList.add('active');
+            document.getElementById('tab1').classList.add('active');
+            
+            document.getElementById('jobsTabBtn').style.display = 'none';
+            nextToJobsBtn.style.display = 'none';
+            
+            // Clear error styling
+            document.querySelectorAll('.form-group input.error, .form-group select.error, .form-group textarea.error').forEach(el => {
+                el.classList.remove('error');
+            });
         }
 
         // ==========================================
@@ -1916,7 +2922,7 @@
             if (data.length === 0) {
                 visaTableBody.innerHTML = `
                     <tr>
-                        <td colspan="7">
+                        <td colspan="6">
                             <div class="empty-state">
                                 <i class="fas fa-globe"></i>
                                 <p>No visa countries found matching your criteria.</p>
@@ -1930,13 +2936,12 @@
             data.forEach(visa => {
                 const statusLabel = visa.status === 'available' ? 'Available' : 'Unavailable';
                 const statusClass = visa.status === 'available' ? 'available' : 'unavailable';
-                const price = visa.price ? `₦${Number(visa.price).toLocaleString()}` : '—';
 
                 let flagHtml = '';
                 if (visa.country) {
-                    const countryData = countries.find(c => c.name === visa.country);
-                    if (countryData && countryData.flagUrl) {
-                        flagHtml = `<img src="${countryData.flagUrl}" alt="${visa.country} flag" class="flag-image" onerror="this.style.display='none';this.parentElement.innerHTML='<span class=\\'flag-fallback\\'>${visa.flag || '🌍'}</span>'">`;
+                    const flagUrl = getFlagUrl(visa.country);
+                    if (flagUrl) {
+                        flagHtml = `<img src="${flagUrl}" alt="${visa.country} flag" class="flag-image" style="width:24px;height:16px;object-fit:cover;border-radius:2px;border:1px solid #ddd;flex-shrink:0;" onerror="this.style.display='none';this.parentElement.innerHTML='<span class=\\'flag-fallback\\'>${visa.flag || '🌍'}</span>'">`;
                     } else {
                         flagHtml = `<span class="flag-fallback">${visa.flag || '🌍'}</span>`;
                     }
@@ -1950,7 +2955,6 @@
                         <td><strong>${visa.country || 'Unknown'}</strong></td>
                         <td>${visa.visaType || '—'}</td>
                         <td>${visa.duration || '—'}</td>
-                        <td>${price}</td>
                         <td>
                             <div class="status-toggle">
                                 <div class="toggle-switch ${visa.status === 'available' ? 'active' : ''}"
@@ -1975,73 +2979,155 @@
             });
             visaTableBody.innerHTML = html;
 
-            document.querySelectorAll('.toggle-switch').forEach(toggle => {
-                toggle.addEventListener('click', async function () {
-                    const id = this.dataset.id;
-                    const newStatus = this.dataset.status === 'available' ? 'unavailable' : 'available';
-                    try {
-                        await db.collection('visa-countries').doc(id).update({
-                            status: newStatus,
-                            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                        });
-                        loadVisas();
-                        showToast('Visa country status updated successfully.');
-                    } catch (error) {
-                        console.error('Error toggling status:', error);
-                        showToast('Error updating status.', true);
-                    }
-                });
+            // Use event delegation for toggle switches
+            document.querySelector('#visaTableBody').addEventListener('click', async function(e) {
+                const toggle = e.target.closest('.toggle-switch');
+                if (!toggle) return;
+                
+                const id = toggle.dataset.id;
+                const newStatus = toggle.dataset.status === 'available' ? 'unavailable' : 'available';
+                try {
+                    await db.collection('visa-countries').doc(id).update({
+                        status: newStatus,
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    loadVisas();
+                    showToast('Visa country status updated successfully.');
+                } catch (error) {
+                    console.error('Error toggling status:', error);
+                    showToast('Error updating status.', true);
+                }
             });
 
-            document.querySelectorAll('.btn-icon.edit').forEach(btn => {
-                btn.addEventListener('click', function () {
-                    const visa = allVisas.find(v => v.id === this.dataset.id);
+            // Use event delegation for edit and delete buttons
+            document.querySelector('#visaTableBody').addEventListener('click', function(e) {
+                const editBtn = e.target.closest('.btn-icon.edit');
+                const deleteBtn = e.target.closest('.btn-icon.delete');
+                
+                if (editBtn) {
+                    const visa = allVisas.find(v => v.id === editBtn.dataset.id);
                     if (visa) editVisa(visa);
-                });
-            });
-
-            document.querySelectorAll('.btn-icon.delete').forEach(btn => {
-                btn.addEventListener('click', function () {
-                    const id = this.dataset.id;
+                }
+                
+                if (deleteBtn) {
+                    const id = deleteBtn.dataset.id;
                     if (confirm('Are you sure you want to delete this visa country? This action cannot be undone.')) {
                         deleteVisa(id);
                     }
-                });
+                }
             });
         }
 
         // ==========================================
-        // EDIT VISA
+        // EDIT VISA - FIXED: Directly sets values without validation/restriction
         // ==========================================
         function editVisa(visa) {
             formTitle.textContent = 'Edit Visa Country';
-            submitBtn.textContent = 'Update Visa';
             editId.value = visa.id;
 
+            // Country - set directly, no validation
             countryInput.value = visa.country || '';
+            
+            // Flag - store for later use
             selectedCountry = visa.flag ? { name: visa.country, flag: visa.flag } : null;
 
+            // Flag preview - use smart lookup to find flag
             if (visa.country) {
-                const countryData = countries.find(c => c.name === visa.country);
-                const flagUrl = countryData ? countryData.flagUrl : null;
+                const flagUrl = getFlagUrl(visa.country);
                 if (flagUrl) {
                     renderFlagPreview(visa.country, visa.flag || '🌍', flagUrl);
                 }
             }
 
-            visaTypeInput.value = visa.visaType || '';
+            // Visa Type - set directly, even if it's not in the dropdown options
+            // Check if the value exists in the dropdown, if not, add it as an option
+            const visaTypeValue = visa.visaType || '';
+            const visaTypeOptions = visaTypeInput.options;
+            let visaTypeExists = false;
+            for (let i = 0; i < visaTypeOptions.length; i++) {
+                if (visaTypeOptions[i].value === visaTypeValue) {
+                    visaTypeExists = true;
+                    break;
+                }
+            }
+            // If the visa type doesn't exist in dropdown, add it as a custom option
+            if (!visaTypeExists && visaTypeValue) {
+                const newOption = document.createElement('option');
+                newOption.value = visaTypeValue;
+                newOption.textContent = visaTypeValue;
+                visaTypeInput.appendChild(newOption);
+            }
+            visaTypeInput.value = visaTypeValue;
+            
             if (visa.visaType === 'Other') {
                 otherVisaGroup.style.display = 'block';
                 otherVisaInput.value = visa.customVisaType || '';
             }
-            priceInput.value = visa.price || '';
-            durationInput.value = visa.duration || '';
+
+            // Duration - set directly, even if it's not in the dropdown options
+            const durationValue = visa.duration || '';
+            const durationOptions = durationInput.options;
+            let durationExists = false;
+            for (let i = 0; i < durationOptions.length; i++) {
+                if (durationOptions[i].value === durationValue) {
+                    durationExists = true;
+                    break;
+                }
+            }
+            // If the duration doesn't exist in dropdown, add it as a custom option
+            if (!durationExists && durationValue) {
+                const newOption = document.createElement('option');
+                newOption.value = durationValue;
+                newOption.textContent = durationValue;
+                durationInput.appendChild(newOption);
+            }
+            durationInput.value = durationValue;
+            
             if (visa.duration === 'Other') {
                 otherDurationGroup.style.display = 'block';
                 otherDurationInput.value = visa.customDuration || '';
             }
+            
             descriptionInput.value = visa.description || '';
             statusInput.value = visa.status || 'available';
+
+            // New fields
+            programCostInput.value = visa.programCost || '';
+            advanceInput.value = visa.advance || '';
+            afterReadinessInput.value = visa.afterReadiness || '';
+            additionalInfoInput.value = visa.additionalInformation || '';
+
+            // Allowed Countries
+            setListValues(allowedCountriesContainer, 'allowed-country-input', visa.allowedCountries || []);
+
+            // Documents Needed
+            setListValues(documentsNeededContainer, 'document-needed-input', visa.documentsNeeded || []);
+
+            // Documents Provided
+            setListValues(documentsProvidedContainer, 'document-provided-input', visa.documentsProvided || []);
+
+            // Jobs - check if visaType is Work Visa or any value that should show jobs
+            const shouldShowJobs = visa.visaType === 'Work Visa' || visa.visaType === 'Seasonal Work Visa' || 
+                                  visa.visaType === 'e-Visa' || visa.visaType === 'Digital Nomad Visa' ||
+                                  (visa.jobs && visa.jobs.length > 0);
+            
+            if (shouldShowJobs) {
+                document.getElementById('jobsTabBtn').style.display = 'block';
+                nextToJobsBtn.style.display = 'block';
+                if (visa.jobs && visa.jobs.length > 0) {
+                    jobsAvailableToggle.checked = true;
+                    jobsContainer.style.display = 'block';
+                    setJobs(visa.jobs);
+                } else {
+                    jobsAvailableToggle.checked = false;
+                    jobsContainer.style.display = 'none';
+                }
+            } else {
+                document.getElementById('jobsTabBtn').style.display = 'none';
+                nextToJobsBtn.style.display = 'none';
+                jobsAvailableToggle.checked = false;
+                jobsContainer.style.display = 'none';
+            }
 
             uploadedImageUrls = visa.images || (visa.image ? [visa.image] : []);
             selectedFiles = [];
@@ -2061,6 +3147,12 @@
                 imagePreview.appendChild(grid);
                 uploadStatus.innerHTML = `<span class="success"><i class="fas fa-check-circle"></i> ${uploadedImageUrls.length} image(s) already saved. Upload new files to replace them.</span>`;
             }
+
+            // Switch to first tab
+            allTabBtns.forEach(b => b.classList.remove('active'));
+            allTabContents.forEach(c => c.classList.remove('active'));
+            document.querySelector('.tab-btn[data-tab="tab1"]').classList.add('active');
+            document.getElementById('tab1').classList.add('active');
 
             document.querySelector('.form-container').scrollIntoView({ behavior: 'smooth' });
         }
@@ -2117,18 +3209,24 @@
         }
 
         // ==========================================
-        // FORM SUBMIT
+        // DIRECT FORM SUBMIT HANDLER - FIXED
         // ==========================================
-        visaForm.addEventListener('submit', async function (e) {
-            e.preventDefault();
+        async function handleFormSubmit(e) {
+            if (e) e.preventDefault();
 
-            submitBtn.disabled = true;
-            submitBtn.textContent = 'Saving...';
+            // Find the active save button for UI feedback
+            const activeSaveBtn = document.querySelector('.btn-submit-tab:not([style*="display: none"]), #submitBtnTab, #submitBtnTabLast');
+            if (activeSaveBtn) {
+                activeSaveBtn.disabled = true;
+                activeSaveBtn.textContent = 'Saving...';
+                activeSaveBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
 
             try {
                 const country = countryInput.value.trim();
                 if (!country) {
-                    alert('Please select a country.');
+                    showToast('Please select a country.', true);
+                    if (activeSaveBtn) { activeSaveBtn.disabled = false; activeSaveBtn.textContent = editId.value ? 'Update Visa' : 'Save Visa'; }
                     return;
                 }
 
@@ -2136,29 +3234,71 @@
 
                 let visaType = visaTypeInput.value;
                 if (!visaType) {
-                    alert('Please select a visa type.');
+                    showToast('Please select a visa type.', true);
+                    if (activeSaveBtn) { activeSaveBtn.disabled = false; activeSaveBtn.textContent = editId.value ? 'Update Visa' : 'Save Visa'; }
                     return;
                 }
                 if (visaType === 'Other') {
                     const custom = otherVisaInput.value.trim();
-                    if (!custom) { alert('Please specify the visa type.'); return; }
+                    if (!custom) { showToast('Please specify the visa type.', true); 
+                        if (activeSaveBtn) { activeSaveBtn.disabled = false; activeSaveBtn.textContent = editId.value ? 'Update Visa' : 'Save Visa'; }
+                        return; }
                     visaType = custom;
                 }
 
                 let duration = durationInput.value;
                 if (!duration) {
-                    alert('Please select a processing duration.');
+                    showToast('Please select a processing duration.', true);
+                    if (activeSaveBtn) { activeSaveBtn.disabled = false; activeSaveBtn.textContent = editId.value ? 'Update Visa' : 'Save Visa'; }
                     return;
                 }
                 if (duration === 'Other') {
                     const custom = otherDurationInput.value.trim();
-                    if (!custom) { alert('Please specify the duration.'); return; }
+                    if (!custom) { showToast('Please specify the duration.', true); 
+                        if (activeSaveBtn) { activeSaveBtn.disabled = false; activeSaveBtn.textContent = editId.value ? 'Update Visa' : 'Save Visa'; }
+                        return; }
                     duration = custom;
                 }
 
-                const price = parseFloat(priceInput.value);
-                if (isNaN(price) || price < 0) {
-                    alert('Please enter a valid price.');
+                const programCost = programCostInput.value.trim();
+                if (!programCost) {
+                    showToast('Please enter the program cost.', true);
+                    if (activeSaveBtn) { activeSaveBtn.disabled = false; activeSaveBtn.textContent = editId.value ? 'Update Visa' : 'Save Visa'; }
+                    return;
+                }
+
+                const advance = advanceInput.value.trim();
+                if (!advance) {
+                    showToast('Please enter the advance payment.', true);
+                    if (activeSaveBtn) { activeSaveBtn.disabled = false; activeSaveBtn.textContent = editId.value ? 'Update Visa' : 'Save Visa'; }
+                    return;
+                }
+
+                const afterReadiness = afterReadinessInput.value.trim();
+                if (!afterReadiness) {
+                    showToast('Please enter the balance (after readiness).', true);
+                    if (activeSaveBtn) { activeSaveBtn.disabled = false; activeSaveBtn.textContent = editId.value ? 'Update Visa' : 'Save Visa'; }
+                    return;
+                }
+
+                const allowedCountries = getListValues(allowedCountriesContainer, 'allowed-country-input');
+                if (allowedCountries.length === 0) {
+                    showToast('Please add at least one allowed country.', true);
+                    if (activeSaveBtn) { activeSaveBtn.disabled = false; activeSaveBtn.textContent = editId.value ? 'Update Visa' : 'Save Visa'; }
+                    return;
+                }
+
+                const documentsNeeded = getListValues(documentsNeededContainer, 'document-needed-input');
+                if (documentsNeeded.length === 0) {
+                    showToast('Please add at least one required document.', true);
+                    if (activeSaveBtn) { activeSaveBtn.disabled = false; activeSaveBtn.textContent = editId.value ? 'Update Visa' : 'Save Visa'; }
+                    return;
+                }
+
+                const documentsProvided = getListValues(documentsProvidedContainer, 'document-provided-input');
+                if (documentsProvided.length === 0) {
+                    showToast('Please add at least one item in What We Provide.', true);
+                    if (activeSaveBtn) { activeSaveBtn.disabled = false; activeSaveBtn.textContent = editId.value ? 'Update Visa' : 'Save Visa'; }
                     return;
                 }
 
@@ -2171,12 +3311,15 @@
                     } catch (uploadError) {
                         console.error('Cloudinary upload error:', uploadError);
                         uploadStatus.innerHTML = `<span class="error"><i class="fas fa-exclamation-circle"></i> Upload failed: ${uploadError.message}</span>`;
+                        showToast('Upload failed: ' + uploadError.message, true);
+                        if (activeSaveBtn) { activeSaveBtn.disabled = false; activeSaveBtn.textContent = editId.value ? 'Update Visa' : 'Save Visa'; }
                         return;
                     }
                 } else if (uploadedImageUrls.length > 0) {
                     finalImageUrls = uploadedImageUrls;
                 } else {
-                    alert('Please upload at least one image.');
+                    showToast('Please upload at least one image.', true);
+                    if (activeSaveBtn) { activeSaveBtn.disabled = false; activeSaveBtn.textContent = editId.value ? 'Update Visa' : 'Save Visa'; }
                     return;
                 }
 
@@ -2185,7 +3328,13 @@
                     flag,
                     visaType,
                     duration,
-                    price,
+                    programCost,
+                    advance,
+                    afterReadiness,
+                    allowedCountries,
+                    documentsNeeded,
+                    documentsProvided,
+                    additionalInformation: additionalInfoInput.value.trim() || '',
                     description: descriptionInput.value.trim() || '',
                     status: statusInput.value,
                     image: finalImageUrls[0],
@@ -2193,6 +3342,20 @@
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                 };
 
+                // Add jobs if work visa and jobs are available
+                if (visaType === 'Work Visa' && jobsAvailableToggle.checked) {
+                    const jobs = getJobs();
+                    // Filter out empty job entries
+                    const validJobs = jobs.filter(job => job.title.trim() !== '' || job.salary.trim() !== '');
+                    if (validJobs.length > 0) {
+                        docData.jobs = validJobs;
+                    } else {
+                        // If jobs toggle is checked but no jobs added, save empty array
+                        docData.jobs = [];
+                    }
+                }
+
+                // Update or create
                 if (editId.value) {
                     await db.collection('visa-countries').doc(editId.value).update(docData);
                     showToast('Visa country has been updated successfully.');
@@ -2209,9 +3372,30 @@
                 console.error('Error saving visa:', error);
                 showToast('Error saving visa: ' + error.message, true);
             } finally {
-                submitBtn.disabled = false;
-                submitBtn.textContent = editId.value ? 'Update Visa' : 'Save Visa';
+                // Re-enable all save buttons
+                document.querySelectorAll('.btn-submit-tab, #submitBtnTab, #submitBtnTabLast').forEach(btn => {
+                    btn.disabled = false;
+                    btn.textContent = editId.value ? 'Update Visa' : 'Save Visa';
+                });
             }
+        }
+
+        // ==========================================
+        // FORM SUBMIT - Connect Save Buttons Directly
+        // ==========================================
+        function submitForm(e) {
+            handleFormSubmit(e);
+        }
+
+        // Attach submit handlers to tab buttons
+        submitBtnTab.addEventListener('click', function (e) {
+            e.preventDefault();
+            submitForm(e);
+        });
+
+        submitBtnTabLast.addEventListener('click', function (e) {
+            e.preventDefault();
+            submitForm(e);
         });
 
         // ==========================================
@@ -2236,8 +3420,7 @@
                 filtered = filtered.filter(visa =>
                     (visa.country && visa.country.toLowerCase().includes(query)) ||
                     (visa.visaType && visa.visaType.toLowerCase().includes(query)) ||
-                    (visa.status && visa.status.toLowerCase().includes(query)) ||
-                    (visa.price && visa.price.toString().includes(query))
+                    (visa.status && visa.status.toLowerCase().includes(query))
                 );
             }
 

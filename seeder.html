@@ -1,0 +1,1193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visa Countries Seeder — Developer Tool</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f1f5f9;
+            color: #0f172a;
+            padding: 40px 20px;
+            min-height: 100vh;
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .header {
+            background: #020617;
+            color: #fff;
+            padding: 32px 40px;
+            border-radius: 16px;
+            margin-bottom: 32px;
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+        .header h1 { font-size: 1.8rem; font-weight: 700; margin-bottom: 8px; }
+        .header h1 span { color: #22c55e; }
+        .header p { color: rgba(255,255,255,0.6); font-size: 0.95rem; }
+        .badge {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 999px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+        .badge.success { background: rgba(22,163,74,0.1); color: #16a34a; }
+        .badge.warning { background: rgba(234,179,8,0.1); color: #eab308; }
+        .badge.info { background: rgba(59,130,246,0.1); color: #3b82f6; }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+        .stat-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 20px 24px;
+            border: 1px solid #e2e8f0;
+        }
+        .stat-card .number { font-size: 2rem; font-weight: 700; }
+        .stat-card .number.green { color: #16a34a; }
+        .stat-card .number.blue { color: #3b82f6; }
+        .stat-card .number.yellow { color: #eab308; }
+        .stat-card .number.red { color: #dc2626; }
+        .stat-card .label { font-size: 0.85rem; color: #64748b; margin-top: 4px; }
+
+        .card {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 28px 32px;
+            border: 1px solid #e2e8f0;
+            margin-bottom: 24px;
+        }
+        .card h2 { font-size: 1.1rem; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+        .card h2 i { color: #16a34a; }
+        .btn {
+            padding: 12px 28px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Inter', sans-serif;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn:hover { transform: translateY(-2px); }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        .btn-primary { background: #16a34a; color: #fff; }
+        .btn-primary:hover { background: #22c55e; }
+        .btn-danger { background: #dc2626; color: #fff; }
+        .btn-danger:hover { background: #ef4444; }
+        .btn-secondary { background: #e2e8f0; color: #0f172a; }
+        .btn-secondary:hover { background: #cbd5e1; }
+        .btn-warning { background: #eab308; color: #fff; }
+        .btn-warning:hover { background: #facc15; }
+        .button-group { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 16px; }
+
+        .progress-wrapper { margin-top: 20px; display: none; }
+        .progress-wrapper.active { display: block; }
+        .progress-bar { width: 100%; height: 8px; background: #e2e8f0; border-radius: 999px; overflow: hidden; margin-top: 8px; }
+        .progress-bar .fill { height: 100%; background: #16a34a; border-radius: 999px; transition: width 0.3s ease; width: 0%; }
+        .progress-text { display: flex; justify-content: space-between; align-items: center; }
+
+        .log-container {
+            max-height: 300px;
+            overflow-y: auto;
+            background: #020617;
+            border-radius: 8px;
+            padding: 16px;
+            font-family: 'monospace';
+            font-size: 0.8rem;
+            color: #22c55e;
+            margin-top: 12px;
+            display: none;
+        }
+        .log-container.active { display: block; }
+        .log-container .log-entry { padding: 2px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .log-container .log-entry.error { color: #dc2626; }
+        .log-container .log-entry.success { color: #22c55e; }
+        .log-container .log-entry.info { color: #60a5fa; }
+
+        .preview-container { max-height: 500px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; background: #f8fafc; }
+        .preview-item { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 12px; padding: 8px 12px; border-bottom: 1px solid #e2e8f0; font-size: 0.85rem; }
+        .preview-item:last-child { border-bottom: none; }
+        .preview-item .field { font-weight: 500; color: #64748b; }
+        .preview-item .value { color: #0f172a; }
+        .preview-header { font-weight: 700; background: #e2e8f0; border-radius: 4px; }
+
+        @media (max-width: 768px) {
+            body { padding: 16px; }
+            .header { padding: 24px; }
+            .card { padding: 20px; }
+            .preview-item { grid-template-columns: 1fr; gap: 4px; padding: 12px; }
+            .stats-grid { grid-template-columns: 1fr 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Visa Countries <span>Seeder</span></h1>
+            <p>Developer tool to bulk upload all visa countries to Firestore. This will seed the <strong>visa-countries</strong> collection with all countries from the data source.</p>
+            <div style="margin-top:12px; display:flex; gap:12px; flex-wrap:wrap;">
+                <span class="badge success">✓ Production Ready</span>
+                <span class="badge warning">⚠ Batch Upload</span>
+                <span class="badge info">ℹ 23 Programs | 17 Countries</span>
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card"><div class="number green" id="totalCountries">0</div><div class="label">Total Programs</div></div>
+            <div class="stat-card"><div class="number blue" id="processedCount">0</div><div class="label">Processed</div></div>
+            <div class="stat-card"><div class="number green" id="successCount">0</div><div class="label">Successful</div></div>
+            <div class="stat-card"><div class="number red" id="errorCount">0</div><div class="label">Errors</div></div>
+        </div>
+
+        <div class="card">
+            <h2><i class="fas fa-database"></i> Seeder Controls</h2>
+            <div class="button-group">
+                <button class="btn btn-primary" id="seedBtn"><i class="fas fa-cloud-upload-alt"></i> Seed All Countries</button>
+                <button class="btn btn-warning" id="previewBtn"><i class="fas fa-eye"></i> Preview Data</button>
+                <button class="btn btn-danger" id="clearBtn"><i class="fas fa-trash"></i> Clear Collection</button>
+                <button class="btn btn-secondary" id="checkBtn"><i class="fas fa-search"></i> Check Existing</button>
+            </div>
+
+            <div class="progress-wrapper" id="progressWrapper">
+                <div class="progress-text">
+                    <span id="progressText">Uploading 0 of 23...</span>
+                    <span id="progressPercent">0%</span>
+                </div>
+                <div class="progress-bar"><div class="fill" id="progressFill"></div></div>
+            </div>
+
+            <div class="log-container" id="logContainer">
+                <div id="logEntries"></div>
+            </div>
+        </div>
+
+        <div class="card" id="previewCard" style="display:none;">
+            <h2><i class="fas fa-list"></i> Data Preview</h2>
+            <div class="preview-container" id="previewContainer"></div>
+        </div>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyDHSOM7-GZXQ7tYySYTRiyCAHZOn9SQhhE",
+            authDomain: "geepchris-bridge.firebaseapp.com",
+            projectId: "geepchris-bridge",
+            storageBucket: "geepchris-bridge.firebasestorage.app",
+            messagingSenderId: "61219875988",
+            appId: "1:61219875988:web:a393bb73ce2b85991b9881"
+        };
+
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+
+        // ==========================================
+        // COUNTRY FLAGS & IMAGES
+        // ==========================================
+        const countryData = {
+            'Poland': { flag: '🇵🇱', image: 'https://images.unsplash.com/photo-1580518337455-9b5b8a472aa6?w=800&h=400&fit=crop', flagUrl: 'https://flagcdn.com/pl.svg' },
+            'Albania': { flag: '🇦🇱', image: 'https://images.unsplash.com/photo-1578058014135-110f1b2c0b63?w=800&h=400&fit=crop', flagUrl: 'https://flagcdn.com/al.svg' },
+            'France': { flag: '🇫🇷', image: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=800&h=400&fit=crop', flagUrl: 'https://flagcdn.com/fr.svg' },
+            'Moldova': { flag: '🇲🇩', image: 'https://images.unsplash.com/photo-1584106004781-1acd8f2f7bb6?w=800&h=400&fit=crop', flagUrl: 'https://flagcdn.com/md.svg' },
+            'Lithuania': { flag: '🇱🇹', image: 'https://images.unsplash.com/photo-1566737236500-c8ac43014a67?w=800&h=400&fit=crop', flagUrl: 'https://flagcdn.com/lt.svg' },
+            'Montenegro': { flag: '🇲🇪', image: 'https://images.unsplash.com/photo-1578106794464-9be7cb1b87b9?w=800&h=400&fit=crop', flagUrl: 'https://flagcdn.com/me.svg' },
+            'Serbia': { flag: '🇷🇸', image: 'https://images.unsplash.com/photo-1543244922-6facd58f1b76?w=800&h=400&fit=crop', flagUrl: 'https://flagcdn.com/rs.svg' },
+            'Slovakia': { flag: '🇸🇰', image: 'https://images.unsplash.com/photo-1590934651276-54f58e428e3f?w=800&h=400&fit=crop', flagUrl: 'https://flagcdn.com/sk.svg' },
+            'Czech Republic': { flag: '🇨🇿', image: 'https://images.unsplash.com/photo-1501594907352-04cda38ebc29?w=800&h=400&fit=crop', flagUrl: 'https://flagcdn.com/cz.svg' },
+            'Germany': { flag: '🇩🇪', image: 'https://images.unsplash.com/photo-1467269204594-9661b134dd2b?w=800&h=400&fit=crop', flagUrl: 'https://flagcdn.com/de.svg' },
+            'Armenia': { flag: '🇦🇲', image: 'https://images.unsplash.com/photo-1590442464186-0c77c0231f01?w=800&h=400&fit=crop', flagUrl: 'https://flagcdn.com/am.svg' },
+            'Spain': { flag: '🇪🇸', image: 'https://images.unsplash.com/photo-1539037116277-4db20889f2d4?w=800&h=400&fit=crop', flagUrl: 'https://flagcdn.com/es.svg' },
+            'Bulgaria': { flag: '🇧🇬', image: 'https://images.unsplash.com/photo-1581530341124-606c4e520425?w=800&h=400&fit=crop', flagUrl: 'https://flagcdn.com/bg.svg' },
+            'North Macedonia': { flag: '🇲🇰', image: 'https://images.unsplash.com/photo-1578058014135-110f1b2c0b63?w=800&h=400&fit=crop', flagUrl: 'https://flagcdn.com/mk.svg' },
+            'Croatia': { flag: '🇭🇷', image: 'https://images.unsplash.com/photo-1581244277943-fe4a9c777189?w=800&h=400&fit=crop', flagUrl: 'https://flagcdn.com/hr.svg' },
+            'Ukraine': { flag: '🇺🇦', image: 'https://images.unsplash.com/photo-1581244277943-fe4a9c777189?w=800&h=400&fit=crop', flagUrl: 'https://flagcdn.com/ua.svg' },
+            'Belarus': { flag: '🇧🇾', image: 'https://images.unsplash.com/photo-1578058014135-110f1b2c0b63?w=800&h=400&fit=crop', flagUrl: 'https://flagcdn.com/by.svg' }
+        };
+
+        function getCountryInfo(countryName) {
+            for (const [key, value] of Object.entries(countryData)) {
+                if (countryName.includes(key)) return value;
+            }
+            return { flag: '🌍', image: '', flagUrl: '' };
+        }
+
+        // ==========================================
+        // COMPLETE VISA DATA - 23 PROGRAMS
+        // ==========================================
+        const visaData = [
+            // POLAND - Program 1 (9 Months)
+            {
+                country: "Poland",
+                nationality: "Citizens from all countries",
+                duration: "9 Months",
+                programCost: "€900",
+                advance: "€400",
+                afterReadiness: "€500",
+                description: "Poland work visa program offering employment opportunities in mushroom picking and warehouse operations. Documents are issued for 1 year with the possibility to obtain Type C visa (up to 90 days) or Type D visa (91+ days). Employer provides assistance with TRC (1–3 years) upon arrival.",
+                documentsNeeded: [
+                    "Renewal copies of candidate's passport (page 1 + stamps)",
+                    "Completed application form",
+                    "CV",
+                    "Certificate of no criminal record with Apostille (after approval by employer)",
+                    "Candidate verification by employer (video task with feedback)"
+                ],
+                documentsProvided: [
+                    "Employment Contract",
+                    "Guarantee Letter",
+                    "Accommodation Proof"
+                ],
+                additionalInformation: "Documents issued for a period of 1 year. Possible to obtain Type C visa (up to 90 days) or Type D visa (91+ days). Employer assists with TRC (1–3 years) upon arrival.",
+                processTiming: "30 – 120 Days",
+                visaType: "Work Visa",
+                jobs: [
+                    { title: "Mushroom picking", salary: "4,200 – 5,500 PLN" },
+                    { title: "Warehouse worker", salary: "4,200 – 5,500 PLN" }
+                ]
+            },
+            // POLAND - Program 2 (1-3 Years)
+            {
+                country: "Poland",
+                nationality: "Citizens from all countries",
+                duration: "1 – 3 Years",
+                programCost: "€1,200",
+                advance: "€500",
+                afterReadiness: "€700",
+                description: "Poland work visa program for production, agricultural, and metal workers. Documents are issued for 1 year with the possibility to obtain Type C visa (up to 90 days) or Type D visa (91+ days). Employer provides assistance with TRC (1–3 years) upon arrival.",
+                documentsNeeded: [
+                    "Renewal copies of candidate's passport (page 1 + stamps)",
+                    "Completed application form",
+                    "CV",
+                    "Certificate of no criminal record with Apostille (after approval by employer)",
+                    "Candidate verification by employer (video task with feedback)"
+                ],
+                documentsProvided: [
+                    "Employment Contract",
+                    "Guarantee Letter",
+                    "Accommodation Proof"
+                ],
+                additionalInformation: "Documents issued for a period of 1 year. Possible to obtain Type C visa (up to 90 days) or Type D visa (91+ days). Employer assists with TRC (1–3 years) upon arrival.",
+                processTiming: "30 – 120 Days",
+                visaType: "Work Visa",
+                jobs: [
+                    { title: "Production Worker", salary: "6,000 – 7,200 PLN" },
+                    { title: "Agricultural worker", salary: "6,000 – 7,200 PLN" },
+                    { title: "Metal Worker", salary: "6,000 – 7,200 PLN" }
+                ]
+            },
+            // ALBANIA - Philippines
+            {
+                country: "Albania",
+                nationality: "Philippines",
+                duration: "1 Year with extension",
+                programCost: "€2,700.00",
+                advance: "€700.00",
+                afterReadiness: "€2,000 (After Visa)",
+                description: "Albania work visa program for Filipino nationals. D visa is issued for 3 months. Upon arrival, candidate applies for Albanian Residence Permit (TRC) which is issued for 1 year with extension possibility. After 1 year of employment with TRC, candidates can apply for jobs in other European countries.",
+                documentsNeeded: [
+                    "High quality passport copy (all pages)",
+                    "Valid UAE TRC",
+                    "Recent passport size photograph",
+                    "Video presentation",
+                    "Full residential address in the UAE",
+                    "English proficiency Min A2 (B1 preferred)",
+                    "Police Clearance Certificate (PCC) in English with Apostille",
+                    "Previous experience preferred"
+                ],
+                documentsProvided: [
+                    "Job Offer / Employment Contract",
+                    "Proof of accommodation in Albania",
+                    "Invitation Letter",
+                    "Documents required for Visa registration"
+                ],
+                additionalInformation: "D visa issued for 3 months. Candidate applies for Albanian Residence Permit (TRC) upon arrival. Residence Permit issued for 1 year with extension possibility. After 1 year of employment + TRC, can apply for jobs in other European countries.",
+                processTiming: "3 Months",
+                visaType: "Work Visa",
+                jobs: [
+                    { title: "Nanny", salary: "€650.00" },
+                    { title: "Housekeeper", salary: "€650.00" },
+                    { title: "Teacher Nanny", salary: "€750.00" },
+                    { title: "Cleaner (Hotel / Restaurant)", salary: "€650.00" },
+                    { title: "Dishwasher", salary: "€650.00" },
+                    { title: "Waiter", salary: "€650.00" },
+                    { title: "Bartender", salary: "€650.00" },
+                    { title: "Receptionist", salary: "€650.00" },
+                    { title: "Hostess", salary: "€650.00" },
+                    { title: "Massage Therapist / Aesthetician (SPA)", salary: "€650.00" },
+                    { title: "Plumber / Electrician", salary: "€650.00" },
+                    { title: "Room Attendant / Housekeeping", salary: "€650.00" }
+                ]
+            },
+            // ALBANIA - Indian
+            {
+                country: "Albania",
+                nationality: "Indian",
+                duration: "1 Year",
+                programCost: "€2,700.00",
+                advance: "€700.00",
+                afterReadiness: "€2,000 (After Visa)",
+                description: "Albania work visa program for Indian nationals offering a wide range of skilled and unskilled positions including construction, mechanical, and technical roles. D visa issued for 3 months. Upon arrival, candidate applies for Albanian Residence Permit (TRC) issued for 1 year with extension possibility.",
+                documentsNeeded: [
+                    "Resume",
+                    "Short Video Presentation",
+                    "Full Scan Passport",
+                    "Passport size photograph",
+                    "Full residential address",
+                    "Police clearance certificate in English and apostilled",
+                    "Experience & education certificates (Apostilled if requested)",
+                    "Additional documents upon employer request"
+                ],
+                documentsProvided: [
+                    "Job Offer / Employment Contract",
+                    "Proof of accommodation in Albania",
+                    "Invitation Letter",
+                    "Documents required for Visa registration (electronic copy)"
+                ],
+                additionalInformation: "D visa issued for 3 months. Candidate applies for Albanian Residence Permit (TRC) upon arrival. Residence Permit issued for 1 year with extension possibility. After 1 year of employment + TRC, can apply for jobs in other European countries.",
+                processTiming: "3 Months",
+                visaType: "Work Visa",
+                jobs: [
+                    { title: "Plastering Specialist", salary: "€400 - €500" },
+                    { title: "Turner (Automatic Gear Box)", salary: "€600 - €650" },
+                    { title: "Assembler for Metal Structures", salary: "€500 - €550" },
+                    { title: "Heavy Machinery Operator (Excavator)", salary: "€850 - €950" },
+                    { title: "Excavator Welder", salary: "€550 - €600" },
+                    { title: "Excavator Mechanic - Engine & Systems", salary: "€850.00" },
+                    { title: "Excavator Electrician", salary: "€650.00" },
+                    { title: "Metal Structure Fitter", salary: "€400 - €500" },
+                    { title: "Metal Structure Welder", salary: "€500 - €550" },
+                    { title: "Refrigeration Technician", salary: "€600 - €700" },
+                    { title: "Cold Storage Technician", salary: "€600 - €700" },
+                    { title: "Vehicle Electrician", salary: "€500 - €600" },
+                    { title: "Wall Painter", salary: "€500 - €600" },
+                    { title: "Car Painter", salary: "€450 - €550" },
+                    { title: "Car Mechanic", salary: "€500 - €750" },
+                    { title: "Aluminium Fabricator", salary: "€500.00" },
+                    { title: "Mason", salary: "€450 - €550" },
+                    { title: "Excavator Operator", salary: "€850 - €950" },
+                    { title: "ACP Sheet Worker", salary: "€450 - €550" },
+                    { title: "ACP Sheet Engineer / Supervisor", salary: "€600 - €650" },
+                    { title: "Car Detailer", salary: "€600 - €650" },
+                    { title: "Mechanical Engineer (Quality / Design / Mfg / Servicing)", salary: "€750 - €850" },
+                    { title: "Carpenter", salary: "€500 - €550" },
+                    { title: "Truck Mechanic", salary: "€500 - €750" },
+                    { title: "Civil Engineer (Roads & Bridges)", salary: "€900 - €1,000" },
+                    { title: "Civil Engineer", salary: "€800 - €900" },
+                    { title: "Mechanical Engineer", salary: "€800 - €900" },
+                    { title: "Industrial Mechanic", salary: "€500 - €750" },
+                    { title: "Metal Laser Cutting Operator", salary: "€500 - €750" },
+                    { title: "Press Brake Operator", salary: "€500 - €750" },
+                    { title: "Fitter for Metallic Structure", salary: "€500 - €650" },
+                    { title: "Washing Machine Technician", salary: "€500 - €650" },
+                    { title: "Plumber", salary: "€550 - €650" }
+                ]
+            },
+            // FRANCE - Dairy Farm
+            {
+                country: "France",
+                nationality: "All Nationalities",
+                duration: "1 Year with extension",
+                programCost: "€2,400.00",
+                advance: "€500.00",
+                afterReadiness: "€1,900.00",
+                description: "France long-term work visa program for seasonal dairy farm workers. French national long-term work visa (Type D — VLS-TS, Salarié / Travailleur Temporaire) is issued. This program offers employment in the agricultural sector with competitive salary based on experience.",
+                documentsNeeded: [
+                    "Copy of valid passport (All Pages)",
+                    "Passport size photo",
+                    "Updated CV / Resume"
+                ],
+                documentsProvided: [
+                    "Work Permit",
+                    "Employment Contract",
+                    "CIPRA - Confirmation of employer registration & legal operation in France",
+                    "MSA (Mutualité Sociale Agricole)",
+                    "KBIS Form - French trade Register confirming employer legal status",
+                    "Accommodation Confirmation"
+                ],
+                additionalInformation: "French national long-term work visa (Type D — VLS-TS, Salarié / Travailleur Temporaire)",
+                processTiming: "3 Months",
+                visaType: "Work Visa",
+                jobs: [
+                    { title: "Dairy Farm Worker (Seasonal Work)", salary: "€1,500 - €2,000 (depending on experience) OR According to labor law" }
+                ]
+            },
+            // FRANCE - Locksmith
+            {
+                country: "France",
+                nationality: "All Nationalities",
+                duration: "1 Year with extension",
+                programCost: "€2,400.00",
+                advance: "€500.00",
+                afterReadiness: "€1,900.00",
+                description: "France work visa program for skilled locksmiths and lock technicians. Fixed-term CDD contract with competitive salary based on experience. French national long-term work visa (Type D — VLS-TS) is issued.",
+                documentsNeeded: [
+                    "Copy of valid passport (All Pages)",
+                    "Passport size photo",
+                    "Updated CV / Resume"
+                ],
+                documentsProvided: [
+                    "Work Permit",
+                    "Employment Contract",
+                    "CIPRA - Confirmation of employer registration & legal operation in France",
+                    "MSA (Mutualité Sociale Agricole)",
+                    "KBIS Form - French trade Register confirming employer legal status",
+                    "Accommodation Confirmation"
+                ],
+                additionalInformation: "Fixed-term CDD contract",
+                processTiming: "3 Months",
+                visaType: "Work Visa",
+                jobs: [
+                    { title: "Locksmith / Lock Technician", salary: "€1,800 - €2,300 (depending on experience) OR Labor law (if applicable)" }
+                ]
+            },
+            // MOLDOVA
+            {
+                country: "Moldova",
+                nationality: "Philippines",
+                duration: "Min 2 years with Extension",
+                programCost: "€1,700.00",
+                advance: "€800.00",
+                afterReadiness: "€900.00",
+                description: "Moldova work visa program for Filipino nationals specializing in massage therapy and salon services. Type D visa valid for 90 days or more is issued. Temporary Residence Permit is issued for 1-2 years with extension possibility.",
+                documentsNeeded: [
+                    "High quality scanned copy of passport",
+                    "Passport size photo",
+                    "Updated resume",
+                    "Proof of work experience",
+                    "Video demonstrating massage/salon skills",
+                    "Basic communication level of English (preferably A2 level)",
+                    "Passport validity must be at least 2 years.",
+                    "Police Clearance Certificate with apostille",
+                    "Other documents requested by the Moldovan consulate, depending on the country of application"
+                ],
+                documentsProvided: [
+                    "Work Permit",
+                    "Employment contract",
+                    "Invitation letter"
+                ],
+                additionalInformation: "Candidates receive a Type D visa valid for 90 days or more. Temporary Residence Permit is issued for 1-2 years with the possibility of extension. Visa approval depends on the immigration authorities of Moldova. Air ticket expenses are covered by the candidate.",
+                processTiming: "45 DAYS +",
+                visaType: "Work Visa",
+                jobs: [
+                    { title: "Massage Therapist / Massage Salon Worker", salary: "$650 Potential earnings: up to $1100" }
+                ]
+            },
+            // LITHUANIA (SEASONAL EMPLOYMENT)
+            {
+                country: "Lithuania (Seasonal Employment)",
+                nationality: "All nationalities",
+                duration: "6 MONTHS - EXTENDABLE",
+                programCost: "€1,800.00",
+                advance: "€500.00",
+                afterReadiness: "€1,300.00",
+                description: "Lithuania seasonal employment visa program for construction workers including masons, electricians, concrete workers, tilers, plasterers, and painters. Documents issued in electronic form. Candidates apply for 90-day Schengen type C visa. Employer assists with residence permit for 2 years after approximately 2 months of work.",
+                documentsNeeded: [
+                    "Passport (main pages + entry and exit stamps)",
+                    "Certificate or diploma confirming specialization with apostille",
+                    "PCC with apostille",
+                    "Updated Resume"
+                ],
+                documentsProvided: [
+                    "Invitation letter from an intermediary / Online migration system",
+                    "Residence agreement",
+                    "Letter of commitment",
+                    "Job offer",
+                    "Letter of guarantee",
+                    "MIG application letter / Online migration system"
+                ],
+                additionalInformation: "Documents are issued in electronic form. Candidates apply for a 90 day Schengen visa type C to cross the border. Upon the candidate's arrival and after approximately 2 months of work, the employer assists with obtaining a residence permit for 2 years (the approximate cost is €200 for the plastic card itself).",
+                processTiming: "2-3 MONTHS",
+                visaType: "Seasonal Work Visa",
+                jobs: [
+                    { title: "Mason", salary: "€2,000.00" },
+                    { title: "Electrician", salary: "€1,800.00 (Experience: 1+ years required)" },
+                    { title: "Concrete Worker", salary: "€1,600.00 (Experience: 1 Year (Min))" },
+                    { title: "Tiler", salary: "€1,100.00 (Experience: 1 Year (Min))" },
+                    { title: "Plasterer", salary: "€1,100.00 (Experience: 1 Year (Min))" },
+                    { title: "Painter", salary: "€1,150.00 (Experience: 1 Year (Min))" }
+                ]
+            },
+            // MONTENEGRO
+            {
+                country: "Montenegro",
+                nationality: "All nationalities",
+                duration: "1 year with Extension for 2 years",
+                programCost: "€1,200.00",
+                advance: "€500.00",
+                afterReadiness: "€700.00",
+                description: "Montenegro work visa program for construction workers. Documents are valid for 1 year for short-term type D work visa (up to 90 days). Upon arrival, candidate registers with police within 24 hours. Employer prepares documents for residence permit within 1-2 months. Residence permit issued for 1 year, extendable up to 2 additional years. Processing time: 40-45 working days.",
+                documentsNeeded: [
+                    "High quality scanned copy of passport",
+                    "Passport size photo",
+                    "Updated Resume",
+                    "Residential Address",
+                    "Communication level of English (A2+)",
+                    "Desired activation date of the invitation"
+                ],
+                documentsProvided: [
+                    "POZIVNO PISMO - official invitation",
+                    "UGOVOR O RADU - employment contract"
+                ],
+                additionalInformation: "The documents issued by the employer are valid for 1 year and are used to obtain a short-term visa type D work visa for Montenegro, allowing the candidate to stay in the country for up to 90 days. After receiving the visa and entering Montenegro, the candidate must register with the police within 24 hours of the place of residence and then start official employment according to the signed contract. During the first 1-2 months of work, the employer prepares and submits the candidate's documents for a Residence permit to the Ministry of Internal Affairs of Montenegro (Ministarstvo unutrašnjih poslova). The residence permit is issued for 1 year with the right to extend it for up to 2 additional years, provided employment continues. Average processing time for the residence permit: 40-45 working days.",
+                processTiming: "2 MONTHS",
+                visaType: "Work Visa",
+                jobs: [
+                    { title: "Builder (Residential & Utility Complex)", salary: "€600 - 800" }
+                ]
+            },
+            // NORTHERN SERBIA
+            {
+                country: "Northern Serbia",
+                nationality: "Asia & Africa",
+                duration: "1 Year",
+                programCost: "€1,500.00",
+                advance: "€500.00",
+                afterReadiness: "€1,000.00",
+                description: "Northern Serbia work visa program for warehouse workers at a chicken products factory. D visa / TRC is issued for 180 days. Documents are provided electronically. Visa stamping is done at the Serbian consulate in the candidate's country. Legalization fee is included in the program cost.",
+                documentsNeeded: [
+                    "Scan passport / High quality scanned copy of passport (Passport must be valid for at least 3 months beyond visa expiry date)",
+                    "Passport size photo",
+                    "Completed application form",
+                    "Police clearance certificate (PCC) apostilled (required for visa stamping)",
+                    "Education documents (translated into Serbian and apostilled): Secondary education: school certificate with transcript / Vocational education: diploma with transcript / Higher education: university diploma with transcript",
+                    "Communication level of English"
+                ],
+                documentsProvided: [
+                    "Letter of invitation from the company",
+                    "Work contract",
+                    "CRPS (company registration certificate)",
+                    "Document on the systematization of available vacancies in the company with a stamp",
+                    "PPZ (Award to a group of people corresponding to the number of candidates submitted for the job)"
+                ],
+                additionalInformation: "Visa Refusal: Before submitting the visa application, the employer checks all prepared documents. If the candidate is denied a visa and the employer approved the documents, the employer must inform the employer of the reason. If the refusal is due to incorrect documents, new documents will be delivered within 30 business days free of charge. If the refusal is for another reason, the employer considers all obligations to the candidate fulfilled. Expired Documents for Visa Application: If the candidate does not submit the documents in time and they expire, the employer reissues the documents with a 50% surcharge. Important: For legalization, translation of the diploma into Serbian is required. If the candidate uses another translator, the employer will not provide a supporting letter for appeal in case of visa refusal. If the candidate terminates the contract without good reason, they bear the costs incurred by the employer, namely living expenses for the month in which the contract was terminated. D visa / TRC is issued for 180 days. Documents are provided electronically. Visa stamping is done at the Serbian consulate in the candidate's country. Legalization fee is included in the program cost.",
+                processTiming: "1 MONTH +",
+                visaType: "Work Visa",
+                jobs: [
+                    { title: "Warehouse Worker (Chicken Products Factory)", salary: "€4.15 / hr Avg. €722 (appr) / OT: €6.18 (max 71hr/m) / Similarity Bonus: €82" }
+                ]
+            },
+            // WESTERN SERBIA
+            {
+                country: "Western Serbia",
+                nationality: "Asia & Africa",
+                duration: "1 Year",
+                programCost: "€1,000.00",
+                advance: "€500.00",
+                afterReadiness: "€500.00",
+                description: "Western Serbia work visa program for food processing plant workers including canning line operators, packaging operators, and warehouse workers. D visa / TRC is issued for 180 days. Documents are provided electronically. Visa stamping is done at the Serbian consulate in the candidate's country.",
+                documentsNeeded: [
+                    "Scan passport / High quality scanned copy of passport (Passport must be valid for at least 3 months beyond visa expiry date)",
+                    "Passport size photo",
+                    "Completed application form",
+                    "Police clearance certificate (PCC) apostilled (required for visa stamping)",
+                    "Education documents (translated into Serbian and apostilled): Secondary education: school certificate with transcript / Vocational education: diploma with transcript / Higher education: university diploma with transcript",
+                    "Communication level of English"
+                ],
+                documentsProvided: [
+                    "Letter of invitation from the company",
+                    "Work contract",
+                    "CRPS (company registration certificate)",
+                    "Document on the systematization of available vacancies in the company with a stamp",
+                    "PPZ (Award to a group of people corresponding to the number of candidates submitted for the job)"
+                ],
+                additionalInformation: "Visa Refusal: Before submitting the visa application, the employer checks all prepared documents. If the candidate is denied a visa and the employer approved the documents, the employer must inform the employer of the reason. If the refusal is due to incorrect documents, new documents will be delivered within 30 business days free of charge. If the refusal is for another reason, the employer considers all obligations to the candidate fulfilled. Expired Documents for Visa Application: If the candidate does not submit the documents in time and they expire, the employer reissues the documents with a 50% surcharge. Important: For legalization, translation of the diploma into Serbian is required. If the candidate uses another translator, the employer will not provide a supporting letter for appeal in case of visa refusal. If the candidate terminates the contract without good reason, they bear the costs incurred by the employer, namely living expenses for the month in which the contract was terminated. D visa / TRC is issued for 180 days. Documents are provided electronically. Visa stamping is done at the Serbian consulate in the candidate's country. Legalization fee is included in the program cost.",
+                processTiming: "1 MONTH +",
+                visaType: "Work Visa",
+                jobs: [
+                    { title: "Canning Line Operator (Food Processing Plant)", salary: "€32 / day Avg. €720 (appr) / OT: €7 (max 1hr/d) / Monthly Earnings / Bonus: €50" },
+                    { title: "Packaging Operator (Food Processing Plant)", salary: "€30.22 / day Avg. €708 (appr) / OT: €7 (max 1hr/d) / Similarity Bonus: €50" },
+                    { title: "Warehouse Worker (Food Processing Plant)", salary: "€30.22 / day Avg. €708 (appr) / OT: €6 (max 1hr/d) / 1st Periodic: €850" }
+                ]
+            },
+            // SLOVAKIA
+            {
+                country: "Slovakia",
+                nationality: "Saudi Arabia, Qatar, UAE (other countries with a valid residence permit), Africa, India upon individual approval",
+                duration: "According to employer terms",
+                programCost: "€2,000.00",
+                advance: "€500.00",
+                afterReadiness: "€1,500.00",
+                description: "Slovakia work visa program for warehouse workers. National visa valid for 90 days is issued. Documents are prepared for warehouse vacancies and remain valid for 3 months. Upon arrival, employer assists with obtaining TRC valid for 2 years.",
+                documentsNeeded: [
+                    "Scanned copy of passport (first page + stamps)",
+                    "Passport must be valid for at least 12 months at the time of application",
+                    "CV",
+                    "Full residential address",
+                    "English language knowledge - communication level",
+                    "Activation date - mandatory"
+                ],
+                documentsProvided: [
+                    "Employment Contract (Pracovná zmluva)",
+                    "Job Invitation Letter (Prísľub na prijatie štátneho príslušníka tretej krajiny do zamestnania)",
+                    "Accommodation Confirmation Letter (Čestné prehlásenie)"
+                ],
+                additionalInformation: "A national visa valid for 90 days is issued. Documents are prepared for warehouse vacancies. Documents remain valid for 3 months. Candidates in Saudi Arabia: example documents no older than 1.5 months. Service fees are paid independently by the candidate; approximate cost: ~$100. Upon arrival, the employer assists with obtaining a TRC valid for 2 years. The candidate independently applies to the consulate for visa stamping. Registration Procedure by Country: Kenya - candidates register independently / Saudi Arabia - the employer sends the appointment request letter / Qatar - application through the consulate in Saudi Arabia; employer sends the letter / Taiwan - appointment request letters are submitted every 27th of the month / UAE - candidates independently send letters to the consulate / Nigeria - application through the consulate in Kenya, candidates independently send letters / India - the employer sends the appointment request letter; after approval candidates additionally enter available dates and register independently",
+                processTiming: "2 MONTHS FOR DOCUMENTS + APPOINTMENT DEPENDING ON THE IDLE AVAILABILITY",
+                visaType: "Work Visa",
+                jobs: [
+                    { title: "Warehouse Worker", salary: "€850 - 1000" }
+                ]
+            },
+            // CZECH REPUBLIC
+            {
+                country: "Czech Republic",
+                nationality: "All nationalities except terrorist countries and citizens of Nigeria",
+                duration: "2 Years with extension",
+                programCost: "€1,200.00",
+                advance: "€500.00",
+                afterReadiness: "€700.00",
+                description: "Czech Republic long-term work visa program for production workers, general workers, and tree trimmers. Candidates submit documents for long-term national visa type D for employment purposes. Upon arrival, employer assists with registration and obtaining Employee Card.",
+                documentsNeeded: [
+                    "Exam copies of a valid passport of the candidate (First Page + All pages)",
+                    "Completed order letter sample will be provided",
+                    "CV of the candidate",
+                    "Full address of registered place of residence",
+                    "The date of invitation activation must be indicated taking into account the time required for document preparation",
+                    "Confirmation of payment for the service"
+                ],
+                documentsProvided: [
+                    "Employment contract",
+                    "Confirmation of accommodation",
+                    "Confirmation that the business entity employs a third country national on the territory of the Czech Republic for the purpose of economic activity"
+                ],
+                additionalInformation: "The candidate submits documents to the Consulate of the Czech Republic for a long-term national visa type D for the purpose of employment. This visa allows the candidate to enter the Czech Republic and start the process of obtaining the Employee Card. Upon arrival in the Czech Republic the employer assists the candidate with registration at the relevant authorities, helps complete the process of obtaining the Employee Card. Provides all necessary documents for further legal employment and residence.",
+                processTiming: "30 DAYS",
+                visaType: "Work Visa",
+                jobs: [
+                    { title: "Production Worker", salary: "Training: CZK 35,000 / After Training: CZK 40,000 / OT: CZK 21,480 - 35,000" },
+                    { title: "General Worker", salary: "CZK 21,480 - 35,000" },
+                    { title: "Tree Trimmer", salary: "CZK 21,480 - 35,000" }
+                ]
+            },
+            // CZECH (seasonal)
+            {
+                country: "Czech Republic (Seasonal)",
+                nationality: "All nationalities, except individuals from terrorist-associated countries and Nigeria",
+                duration: "According to Czech labor legislation (with possibility of extension)",
+                programCost: "€800.00",
+                advance: "€300.00",
+                afterReadiness: "€500.00",
+                description: "Czech Republic seasonal work visa program for construction workers, greenhouse workers, production workers, and rebar workers. Accommodation is provided by the employer free of charge. Lunch and transportation to workplace are also provided free of charge.",
+                documentsNeeded: [
+                    "Examined passport (First + All Pages)",
+                    "Specified date of validity of the invitation, taking into account our document preparation time"
+                ],
+                documentsProvided: [
+                    "ROZHODNUTÍ - Work permit",
+                    "PRACOVNÍ SMLOUVA - Employment contract",
+                    "DOKLAD (POTVRZENÍ) O ZAJIŠTĚNÍ UBYTOVÁNÍ - Confirmation of accommodation",
+                    "Potvrzení subjektu, přijímajícího na území České republiky cizince z třetích zemí za účelem ekonomické činnosti - Confirmation of the entity accepting third country nationals in the Czech Republic for economic activity"
+                ],
+                additionalInformation: "For jobs in Prague: employees commute independently (metro, bus). For jobs outside Prague: accommodation is usually close to the workplace in a paid dormitory. A Czech visa is required for employment. Accommodation is provided by the employer, free of charge. Lunch is provided by the employer, free of charge. Free transportation to the workplace provided by the employer.",
+                processTiming: "30 DAYS",
+                visaType: "Seasonal Work Visa",
+                jobs: [
+                    { title: "Construction Worker", salary: "CZK 180 - 220 / hr (€7.30 - 8.90 / hr)" },
+                    { title: "Greenhouse Worker", salary: "CZK 130 / hr" },
+                    { title: "Production Worker (RUBBER COVERING MANUFACTURING)", salary: "CZK 130 / hr" },
+                    { title: "Rebar Worker (Reinforcement Worker)", salary: "Training: CZK 130 / hr / After Training: CZK 200 - 230 / hr" }
+                ]
+            },
+            // CZECH (Seasonal Documents) - 270 Days
+            {
+                country: "Czech Republic (Seasonal Documents)",
+                nationality: "All nationalities, except individuals from terrorist-associated countries and Nigeria",
+                duration: "270 Days According to Czech labor legislation (with possibility of extension)",
+                programCost: "€800.00",
+                advance: "€300.00",
+                afterReadiness: "€500.00",
+                description: "Czech Republic seasonal work visa program (270 days) for construction workers, greenhouse workers, and rebar workers. Accommodation is provided in a paid dormitory. Lunch is provided by the employer free of charge. Free transportation to the workplace is provided.",
+                documentsNeeded: [
+                    "Examined passport (First + All Pages)",
+                    "Specified date of validity of the invitation, taking into account our document preparation time"
+                ],
+                documentsProvided: [
+                    "ROZHODNUTÍ - Work permit",
+                    "PRACOVNÍ SMLOUVA - Employment contract",
+                    "DOKLAD (POTVRZENÍ) O ZAJIŠTĚNÍ UBYTOVÁNÍ - Confirmation of accommodation"
+                ],
+                additionalInformation: "For jobs in Prague: employees commute independently (metro, bus). For jobs outside Prague: accommodation is usually close to the workplace in a paid dormitory. A Czech visa is required for employment. Accommodation is provided in a paid dormitory. Lunch is provided by the employer, free of charge. Free transportation to the workplace provided by the employer.",
+                processTiming: "30 DAYS",
+                visaType: "Seasonal Work Visa",
+                jobs: [
+                    { title: "Construction Worker", salary: "CZK 180 - 220 / hr (€7.30 - 8.90 / hr) depending on Work Experience" },
+                    { title: "Greenhouse Worker", salary: "CZK 130 / hr" },
+                    { title: "Rebar Worker (Reinforcement Worker)", salary: "Training: CZK 130 / hr / After Training: CZK 200 - 230 / hr" }
+                ]
+            },
+            // GERMANY - Terrorist states excluded
+            {
+                country: "Germany",
+                nationality: "All nationalities except citizens of countries classified as terrorist states",
+                duration: "1 year visa - stay upto 90 days",
+                programCost: "€2,600.00",
+                advance: "€1,200.00",
+                afterReadiness: "€1,400.00",
+                description: "Germany work visa program for construction workers and hotel cleaning staff. 1-year visa is issued with the right to stay up to 90 days. Employer assists with residence permit (TRP) application. Upon arrival, employer meets candidate at the airport.",
+                documentsNeeded: [
+                    "Passport scans of all pages/spreads (first page + stamps)",
+                    "CV (any format / Europass preferred)",
+                    "Full residential address",
+                    "English language certificate at level A2-B1 (not mandatory)",
+                    "Mandatory indication of the desired invitation activation date!"
+                ],
+                documentsProvided: [
+                    "Vorabzustimmung der Bundesagentur für Arbeit - Pre-approval for employment from the Federal Employment Agency (ZAV)",
+                    "GARANTIESCHREIBEN - Guarantee letter",
+                    "UNTERKUNFT - Accommodation confirmation",
+                    "Erklärung zum Beschäftigungsverhältnis / Declaration of employment relationship",
+                    "Antrag auf Erteilung eines nationalen Visums Application for a national visa / Application for the issuance of a national visa",
+                    "Appointment Letter from Visa Application Centre"
+                ],
+                additionalInformation: "A 1 year visa is issued with the right to stay up to 90 days. The candidate applies independently at the consulate for visa stamping. Consulate service fee is paid separately and depends on the country of application. The employer assists with the residence permit (TRP) application. The employer responds to all inquiries from the consulate and confirms the employment. Upon arrival, the employer meets the candidate at the airport. IMPORTANT: Candidates must verify whether the consulate where they apply requires diploma recognition through the ANABIN system or if standard accreditation is sufficient. The employer accepts: candidates with a standard diploma, or candidates without a diploma (for unskilled/general workers).",
+                processTiming: "4 MONTHS",
+                visaType: "Work Visa",
+                jobs: [
+                    { title: "Construction Worker (Skilled / Unskilled)", salary: "€12.50 / hr + OT / average 160 - 180" },
+                    { title: "Hotel Cleaning Staff", salary: "€12.50 / hr + OT / average 160 - 180" }
+                ]
+            },
+            // GERMANY - African/ North Asia (ZAV NOT APPLICABLE)
+            {
+                country: "Germany",
+                nationality: "African Nationalities/ Applicants from North Asia (ZAV NOT APPLICABLE)",
+                duration: "1 year visa - stay upto 90 days",
+                programCost: "€1,600.00",
+                advance: "€600.00",
+                afterReadiness: "€1,000.00",
+                description: "Germany work visa program for warehouse workers and restaurant staff. Qualifications are recognized by IHK FOSA (recognition fee included). Employer applies to the German Federal Employment Agency. After visa approval, travel to Germany and apply for residence permit.",
+                documentsNeeded: [
+                    "Submit your documents for employer verification",
+                    "Your qualifications are recognized by IHK FOSA (recognition fee included)",
+                    "The employer applies to the German Federal Employment Agency",
+                    "After document verification and the second payment, the originals are sent via DHL",
+                    "Book your Type D Employment Visa appointment through VISAMED and submit your application",
+                    "After visa approval, travel to Germany and apply for your residence permit"
+                ],
+                documentsProvided: [
+                    "Vorabzustimmung der Bundesagentur für Arbeit - Pre-approval for employment from the Federal Employment Agency (ZAV)",
+                    "GARANTIESCHREIBEN - Guarantee letter",
+                    "UNTERKUNFT - Accommodation confirmation",
+                    "Erklärung zum Beschäftigungsverhältnis / Declaration of employment relationship",
+                    "Antrag auf Erteilung eines nationalen Visums Application for a national visa / Application for the issuance of a national visa"
+                ],
+                additionalInformation: "",
+                processTiming: "60 Days",
+                visaType: "Work Visa",
+                jobs: [
+                    { title: "Warehouse worker", salary: "€14.50 / hr + OT / average 160 - 180" },
+                    { title: "Restaurant Staff", salary: "€14.50 / hr + OT / average 160 - 180" }
+                ]
+            },
+            // ARMENIA - e-visa
+            {
+                country: "Armenia (e-visa)",
+                nationality: "India, Vietnam, Philippines, Indonesia, Egypt",
+                duration: "1 year (subject to employer terms)",
+                programCost: "€2,000.00",
+                advance: "€1,000.00",
+                afterReadiness: "€1,000 (UPON VISA APPROVAL)",
+                description: "Armenia e-visa program for delivery couriers, taxi drivers, masons, and plasterers. Visa is issued for 120 days with opportunity to extend by obtaining TRC. Upon arrival, candidate is met by employer representative and may start work immediately after signing employment contract.",
+                documentsNeeded: [
+                    "Passport scans of all pages/spreads",
+                    "CV",
+                    "Passport size photo",
+                    "Completed Order Brief",
+                    "Taxi: International Driving License, Category B",
+                    "Min 2 years Experience",
+                    "Video Presentation",
+                    "Diploma confirming qualification"
+                ],
+                documentsProvided: [
+                    "E-VISA",
+                    "Invitation letter from the employer"
+                ],
+                additionalInformation: "The visa is issued for a period of 120 days. If the candidate performs the work properly, there is an opportunity to extend the stay by obtaining a TRC. Approximately €100 is deducted monthly from the salary. Departure is possible immediately after receiving all documents. Upon arrival, the candidate will be met by a representative of the employer. The candidate may start work immediately after signing the employment contract.",
+                processTiming: "14 DAYS",
+                visaType: "e-Visa",
+                jobs: [
+                    { title: "Delivery Courier / Taxi Driver", salary: "Up to $875 / Month" },
+                    { title: "Mason / Plasterer", salary: "$1,300/month + OT" }
+                ]
+            },
+            // SPAIN (Digital Nomad visa)
+            {
+                country: "Spain (Digital Nomad visa)",
+                nationality: "All nationalities, except for terrorist countries",
+                duration: "6 MONTHS + EXTENDABLE",
+                programCost: "€1,800.00",
+                advance: "€900.00",
+                afterReadiness: "€900.00",
+                description: "Spain Digital Nomad visa program for IT specialists, consultants, designers, marketers, analysts, developers, entrepreneurs, and any professionals who work online. Full support provided including assistance with collecting documents, preparation of files for submission, and verification of compliance with criteria.",
+                documentsNeeded: [
+                    "Foreign passport (valid for at least 2 years at the time of application)",
+                    "Diploma or confirmation of qualifications",
+                    "Certificate of no criminal record with an apostille",
+                    "Proof of income for the last 3–6 months (bank statement)",
+                    "Income must be at least €2,640/month",
+                    "Employment contract with a foreign employer",
+                    "Resume indicating work experience and skills",
+                    "Certificate from the company confirming remote employment",
+                    "Medical insurance for the period of stay (can be provided after preliminary verification of documents)",
+                    "Completed application form (we provide a template)",
+                    "Passport size photo"
+                ],
+                documentsProvided: [
+                    "N/A"
+                ],
+                additionalInformation: "We work with clients online, providing full support: assistance with collecting documents; preparation of files for submission; advice on requirements and procedures; verification of compliance with criteria; we provide an accompanying package in Valencia, including an interpreter during local procedures and communication with the relevant authorities; we help to eliminate the reasons for refusal.",
+                processTiming: "3 MONTHS",
+                visaType: "Digital Nomad Visa",
+                jobs: [
+                    { title: "IT specialists, consultants, designers, marketers, analysts, developers, entrepreneurs, any professionals who work online", salary: "N/A" }
+                ]
+            },
+            // BULGARIA
+            {
+                country: "Bulgaria",
+                nationality: "India, Nepal",
+                duration: "1 year, with the possibility of extension",
+                programCost: "€1,800.00",
+                advance: "€900.00",
+                afterReadiness: "€900.00",
+                description: "Bulgaria work visa program for construction workers, bricklayers, general laborers, and warehouse assistants. Documents are issued for 1 year. Type C visa (up to 90 days) or Type D visa (90 days or more) is possible. Employer assists with TRC for 1–3 years upon arrival. Transport provided by employer for commute.",
+                documentsNeeded: [
+                    "Foreign passport (valid for at least 2 years at the time of application)",
+                    "Diploma or confirmation of qualifications",
+                    "Certificate of no criminal record with an apostille",
+                    "Proof of income for the last 3–6 months (bank statement)",
+                    "Income must be at least €2,640/month"
+                ],
+                documentsProvided: [
+                    "Employment contract",
+                    "Health insurance",
+                    "Work and residence permit"
+                ],
+                additionalInformation: "Documents are issued for a period of 1 year. With these documents, it is possible to obtain a Type C visa (up to 90 days) or a Type D visa (90 days or more), depending on the position. Upon the candidate's arrival, the employer assists with obtaining a TRC for 1–3 years. Transport provided by the employer for the commute to and from work.",
+                processTiming: "3 MONTHS +",
+                visaType: "Work Visa",
+                jobs: [
+                    { title: "Construction Worker / Bricklayer / General Laborer", salary: "900 - 1,400 + €1,000/m for 160h + OT" },
+                    { title: "Warehouse Assistant", salary: "1000 Euro + €1000/m for 160h + OT" }
+                ]
+            },
+            // NORTH MACEDONIA
+            {
+                country: "North Macedonia",
+                nationality: "N/A",
+                duration: "N/A",
+                programCost: "€1,300.00",
+                advance: "€300.00",
+                afterReadiness: "€1,000.00",
+                description: "North Macedonia work visa program for construction workers, general workers, bricklayers, plasterers, concrete workers, steel fixers, warehouse workers, and scanner operators. Accommodation provided by employer. Free transport from accommodation to workplace. Legal employment with stable income and safe working environment.",
+                documentsNeeded: [
+                    "Valid Passport",
+                    "Updated Resume & Cover Letter",
+                    "Experience preferred",
+                    "Basic Scanner / Computer Skill, Accuracy, Physical fit"
+                ],
+                documentsProvided: [
+                    "Employment Contract"
+                ],
+                additionalInformation: "Accommodation provided by Employer. Free transport from accommodation to the workplace. Legal employment in North Macedonia. Stable income and safe working environment. Support with accommodation and daily transport. Assistance with onboarding and local integration.",
+                processTiming: "N/A",
+                visaType: "Work Visa",
+                jobs: [
+                    { title: "Construction Worker / General workers / Bricklayers (Masons) / Plasterers / Concrete / Steel fixers (Rebar workers)", salary: "600–700 USD" },
+                    { title: "Warehouse worker / Scanner operator", salary: "600–700 USD" }
+                ]
+            },
+            // CROATIA (Seasonal)
+            {
+                country: "Croatia (Seasonal)",
+                nationality: "All nationalities except for terrorist countries (Afghanistan, Iraq, Somalia, etc.)",
+                duration: "2 Months for Doc",
+                programCost: "€1,500 + €150 (VFS)",
+                advance: "€500.00",
+                afterReadiness: "€1,000.00",
+                description: "Croatia seasonal work visa program for construction workers, beer packaging and bottling operators, and food delivery couriers. Package of documents includes Work Permit and Sponsorship Certificate confirming financial support. Accommodation provided by employer free of charge.",
+                documentsNeeded: [
+                    "Scanned copies of all pages of the candidate's valid passport",
+                    "A resume created in europass",
+                    "Passport size photo of 3.5*4.5 (clear and high quality photo)",
+                    "Experience in warehouse or production (preferred)",
+                    "Experience with scanners and inventory management systems is an advantage",
+                    "Knowledge of label and packaging production processes is an advantage"
+                ],
+                documentsProvided: [
+                    "Employment Contract",
+                    "Health Insurance",
+                    "Sponsorship Certificate",
+                    "Possibility of obtaining a TRB"
+                ],
+                additionalInformation: "Package of documents from the employer - Work Permit. A sponsorship certificate from the employer is a key document confirming the financial support of candidate during his/her stay in Croatia. Accommodation: provided by the employer free of charge. A driver's license is not a requirement. Work during warm periods is mainly on bicycles and scooters.",
+                processTiming: "The time of documents production is 6-8 weeks. Obtaining a sponsorship certificate: 1-2 weeks. Work permit: 4-4.5 weeks. Visa issuance period is 3-4 weeks.",
+                visaType: "Seasonal Work Visa",
+                jobs: [
+                    { title: "Construction Worker", salary: "N/A" },
+                    { title: "BEER PACKAGING AND BOTTLING OPERATOR", salary: "12,500 HRK per month (approximately 1,730 EUR) + OT / Hourly rate: 78.13 HRK/hour (approximately 10.80 EUR/hour)" },
+                    { title: "FOOD DELIVERY COURIER", salary: "650 – 900 EUR" }
+                ]
+            },
+            // UKRAINE
+            {
+                country: "Ukraine",
+                nationality: "N/A",
+                duration: "12 Months and Renewable",
+                programCost: "€1,000.00",
+                advance: "€300.00",
+                afterReadiness: "€700.00",
+                description: "Ukraine work visa program for tilers, electricians, painter/plasterers, plumbers, and general workers. Accommodation, meals, transport, and protective equipment provided by employer. Document is valid for a period of 90 calendar days.",
+                documentsNeeded: [
+                    "Updated Resume",
+                    "Valid Passport",
+                    "2 Years of work Experience",
+                    "Short video presentations or worksamples",
+                    "Age: 22-48",
+                    "Knowledge of English"
+                ],
+                documentsProvided: [
+                    "Document is valid for a period of 90 calendar days."
+                ],
+                additionalInformation: "Accommodation: Provided by employer. Meals: Provided by employer. Transport: Provided by employer. Protective Equipment: Provided by employer.",
+                processTiming: "N/A",
+                visaType: "Work Visa",
+                jobs: [
+                    { title: "Tiler", salary: "USD 900.00" },
+                    { title: "Electrician", salary: "USD 850.00" },
+                    { title: "Painter/Plasterer", salary: "USD 750.00" },
+                    { title: "Plumber", salary: "USD 650.00" },
+                    { title: "General Worker", salary: "USD 600.00" }
+                ]
+            },
+            // BELARUS
+            {
+                country: "Belarus",
+                nationality: "N/A",
+                duration: "N/A",
+                programCost: "€1,600.00",
+                advance: "€500.00",
+                afterReadiness: "€1,100.00",
+                description: "Belarus work visa program for warehouse workers. Accommodation provided by employer. Basic requirements include updated resume, valid passport, and knowledge of English.",
+                documentsNeeded: [
+                    "Updated Resume",
+                    "Valid Passport",
+                    "Knowledge of English"
+                ],
+                documentsProvided: [
+                    "N/A"
+                ],
+                additionalInformation: "Accommodation Provided by Employer",
+                processTiming: "N/A",
+                visaType: "Work Visa",
+                jobs: [
+                    { title: "Warehouse Worker", salary: "N/A" }
+                ]
+            }
+        ];
+
+        // ==========================================
+        // STATE
+        // ==========================================
+        let totalCountries = visaData.length;
+        let processedCount = 0, successCount = 0, errorCount = 0;
+
+        const seedBtn = document.getElementById('seedBtn');
+        const previewBtn = document.getElementById('previewBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const checkBtn = document.getElementById('checkBtn');
+        const totalCountriesEl = document.getElementById('totalCountries');
+        const processedCountEl = document.getElementById('processedCount');
+        const successCountEl = document.getElementById('successCount');
+        const errorCountEl = document.getElementById('errorCount');
+        const progressWrapper = document.getElementById('progressWrapper');
+        const progressFill = document.getElementById('progressFill');
+        const progressText = document.getElementById('progressText');
+        const progressPercent = document.getElementById('progressPercent');
+        const logContainer = document.getElementById('logContainer');
+        const logEntries = document.getElementById('logEntries');
+        const previewCard = document.getElementById('previewCard');
+        const previewContainer = document.getElementById('previewContainer');
+
+        totalCountriesEl.textContent = totalCountries;
+        updateStats();
+
+        function updateStats() {
+            processedCountEl.textContent = processedCount;
+            successCountEl.textContent = successCount;
+            errorCountEl.textContent = errorCount;
+        }
+
+        function log(message, type = 'info') {
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            const timestamp = new Date().toLocaleTimeString();
+            entry.textContent = `[${timestamp}] ${message}`;
+            logEntries.appendChild(entry);
+            logContainer.classList.add('active');
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+
+        function updateProgress(current, total) {
+            const percent = Math.round((current / total) * 100);
+            progressFill.style.width = percent + '%';
+            progressPercent.textContent = percent + '%';
+            progressText.textContent = `Uploading ${current} of ${total}...`;
+        }
+
+        function getCountryFlag(countryName) {
+            const info = getCountryInfo(countryName);
+            return info.flag || '🌍';
+        }
+
+        function getCountryImage(countryName) {
+            const info = getCountryInfo(countryName);
+            return info.image || '';
+        }
+
+        function getCountryFlagUrl(countryName) {
+            const info = getCountryInfo(countryName);
+            return info.flagUrl || '';
+        }
+
+        function buildVisaDocument(data) {
+            // Parse visa type
+            let visaType = data.visaType || 'Work Visa';
+            if (data.country.includes('Seasonal') || data.country.includes('seasonal')) visaType = 'Seasonal Work Visa';
+            if (data.country.includes('Digital Nomad')) visaType = 'Digital Nomad Visa';
+            if (data.country.includes('e-visa')) visaType = 'e-Visa';
+
+            // Get country image
+            const imageUrl = getCountryImage(data.country);
+
+            // Build allowedCountries
+            let allowedCountries = data.nationality ? [data.nationality] : ['All nationalities'];
+
+            // Build jobs array
+            let jobs = data.jobs || [];
+
+            return {
+                country: data.country,
+                flag: getCountryFlag(data.country),
+                visaType: visaType,
+                duration: data.duration || 'Varies',
+                programCost: data.programCost || 'Price on request',
+                advance: data.advance || 'N/A',
+                afterReadiness: data.afterReadiness || 'N/A',
+                description: data.description || `${data.country} visa program.`,
+                status: 'available',
+                allowedCountries: allowedCountries,
+                documentsNeeded: data.documentsNeeded || ['International Passport', 'CV', 'Passport photo'],
+                documentsProvided: data.documentsProvided || ['Employment Contract', 'Work Permit'],
+                additionalInformation: data.additionalInformation || '',
+                processingTime: data.processTiming || 'Varies',
+                image: imageUrl,
+                images: imageUrl ? [imageUrl] : [],
+                jobs: jobs,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+        }
+
+        async function seedCountries() {
+            if (seedBtn.disabled) return;
+            if (!confirm(`This will upload ${totalCountries} programs to Firestore. Continue?`)) return;
+
+            processedCount = 0; successCount = 0; errorCount = 0;
+            logEntries.innerHTML = '';
+            progressWrapper.classList.add('active');
+            seedBtn.disabled = true;
+            updateStats();
+            log('🚀 Starting batch upload...', 'info');
+
+            for (let i = 0; i < visaData.length; i++) {
+                const data = visaData[i];
+                try {
+                    const docData = buildVisaDocument(data);
+                    await db.collection('visa-countries').add(docData);
+                    successCount++;
+                    log(`✅ ${data.country} (${data.nationality}) uploaded successfully`, 'success');
+                } catch (err) {
+                    errorCount++;
+                    log(`❌ ${data.country} failed: ${err.message}`, 'error');
+                }
+                processedCount++;
+                updateStats();
+                updateProgress(processedCount, totalCountries);
+            }
+
+            log(`🎉 Seeding complete! ${successCount} successful, ${errorCount} errors.`, 'info');
+            seedBtn.disabled = false;
+            setTimeout(() => checkExisting(), 1000);
+        }
+
+        async function checkExisting() {
+            log('🔍 Checking existing countries in Firestore...', 'info');
+            try {
+                const snapshot = await db.collection('visa-countries').get();
+                const existing = snapshot.docs.map(doc => doc.data().country);
+                log(`📊 Found ${snapshot.size} existing countries in the database`, 'info');
+                if (existing.length > 0) log(`📋 Existing: ${existing.join(', ')}`, 'info');
+                processedCount = snapshot.size; successCount = snapshot.size; updateStats();
+            } catch (err) { log(`❌ Error checking: ${err.message}`, 'error'); }
+        }
+
+        async function clearCollection() {
+            if (!confirm('⚠️ This will DELETE ALL visa countries. Are you sure?')) return;
+            if (!confirm('⚠️ FINAL WARNING: This cannot be undone.')) return;
+            seedBtn.disabled = true;
+            log('🗑️ Deleting all visa countries...', 'warning');
+            try {
+                const snapshot = await db.collection('visa-countries').get();
+                const batch = db.batch();
+                snapshot.docs.forEach(doc => batch.delete(doc.ref));
+                await batch.commit();
+                log(`✅ Deleted ${snapshot.size} countries`, 'success');
+                processedCount = 0; successCount = 0; errorCount = 0; updateStats();
+            } catch (err) { log(`❌ Error: ${err.message}`, 'error'); }
+            seedBtn.disabled = false;
+        }
+
+        function previewData() {
+            previewCard.style.display = 'block';
+            previewContainer.innerHTML = '';
+            
+            const header = document.createElement('div');
+            header.className = 'preview-item preview-header';
+            header.innerHTML = `<span>Country</span><span>Nationality</span><span>Duration</span><span>Cost</span><span>Jobs</span>`;
+            previewContainer.appendChild(header);
+
+            visaData.forEach(data => {
+                const item = document.createElement('div');
+                item.className = 'preview-item';
+                const jobCount = data.jobs ? data.jobs.length : 0;
+                item.innerHTML = `<span><strong>${data.country}</strong></span><span>${data.nationality}</span><span>${data.duration}</span><span>${data.programCost}</span><span>${jobCount}</span>`;
+                previewContainer.appendChild(item);
+            });
+            log(`👁️ Showing preview of ${visaData.length} programs`, 'info');
+        }
+
+        seedBtn.addEventListener('click', seedCountries);
+        previewBtn.addEventListener('click', previewData);
+        clearBtn.addEventListener('click', clearCollection);
+        checkBtn.addEventListener('click', checkExisting);
+
+        setTimeout(() => checkExisting(), 500);
+    </script>
+</body>
+</html>
